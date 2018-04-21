@@ -78,8 +78,8 @@ void EncodeInit(void)
     TIM_Cmd(TIM4, ENABLE);
 }
 
-static u16 last_cnt, counts, v;
-inline int get_encoder_velocity()
+static u32 last_cnt, counts, v;
+inline int get_encoder_counts()
 {
     counts = TIM -> CNT - last_cnt;
     if (counts < - encoder_counter_reload / 2) // counter overflowed
@@ -88,24 +88,27 @@ inline int get_encoder_velocity()
     return counts;
 }
 
+// THESE PARSMS NEED TO BE CUSTOMIZED!
 #define spokes_num 11
 #define reduction_ratio 19.8
-#define sysTick_period 10 // 10ms
+#define sysTick_period 50 // update v every 50ms
+#define wheel_perimeter 220 // in mm
 
 extern "C" void SysTick_Handler() // does "void" have to be written within ()?
 {
-    v = get_encoder_velocity() / spokes_num / reduction_ratio / sysTick_period; // 把除法拆开写
-    // v应该是小数，怎么用定点小数表示？
+    v = get_encoder_counts() * wheel_perimeter * 1000 / (spokes_num * reduction_ratio * sysTick_period); // update velocity
+    // v in mm/s; all vals must be u32 so that the multiplication doesn't overflow
     return;
 }
 
 void systickInit()
 {
-    SysTick_Config(SystemCoreClock / 1000 * sysTick_period - 1); // SystemCoreClock == 72MHz
+    SysTick_Config(SystemCoreClock / 1000 * sysTick_period); // SystemCoreClock == 72MHz
     return;
 }
-
+// 测试后把上面的代码扩展成两个轮子的！
 // 数脉冲宽度需要取五个或多个（维护队列）做平均滤波！
+
 
 int main()
 {
