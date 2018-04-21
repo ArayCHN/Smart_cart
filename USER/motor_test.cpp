@@ -78,7 +78,7 @@ void EncodeInit(void)
     TIM_Cmd(TIM4, ENABLE);
 }
 
-static u32 last_cnt, counts, v;
+static int last_cnt, counts, v; // signed! cuz v can be negative
 inline int get_encoder_counts()
 {
     counts = TIM -> CNT - last_cnt;
@@ -97,7 +97,7 @@ inline int get_encoder_counts()
 extern "C" void SysTick_Handler() // does "void" have to be written within ()?
 {
     v = get_encoder_counts() * wheel_perimeter * 1000 / (spokes_num * reduction_ratio * sysTick_period); // update velocity
-    // v in mm/s; all vals must be u32 so that the multiplication doesn't overflow
+    // v in mm/s; all vals must be signed int32 so that the multiplication doesn't overflow
     return;
 }
 
@@ -109,6 +109,42 @@ void systickInit()
 // 测试后把上面的代码扩展成两个轮子的！
 // 数脉冲宽度需要取五个或多个（维护队列）做平均滤波！
 
+/* initialize TIM8 for input detection for encoder  */
+// void TIM8_Cap_Init(u16 arr, u16 psc)
+// {      
+//     TIM_ICInitTypeDef  TIM5_ICInitStructure;
+//     TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
+//     NVIC_InitTypeDef NVIC_InitStructure;
+  
+//     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);    //使能TIM5时钟  
+      
+//     //TIM5的配置  
+//     TIM_TimeBaseStructure.TIM_Period = arr;     //重装载值  
+//     TIM_TimeBaseStructure.TIM_Prescaler =psc;   //分频系数   
+//     TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;      //tDTS = tCK_INT  
+//     TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;  //向上计数  
+//     TIM_TimeBaseInit(TIM5, &TIM_TimeBaseStructure);   
+    
+//     //TIM5输入捕获配置  
+//     TIM5_ICInitStructure.TIM_Channel = TIM_Channel_1; //我们用通道1  
+//     TIM5_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;    //上升沿捕获  
+//     TIM5_ICInitStructure.TIM_ICSelection = TIM_ICSelection_DirectTI; //映射到TI1  
+//     TIM5_ICInitStructure.TIM_ICPrescaler = TIM_ICPSC_DIV1;   //无预分频器   
+//     TIM5_ICInitStructure.TIM_ICFilter = 0x00; //IC1F=0000 ，无滤波器  
+//     TIM_ICInit(TIM5, &TIM5_ICInitStructure);  
+      
+//     //中断优先级配置  
+//     NVIC_InitStructure.NVIC_IRQChannel = TIM5_IRQn;    
+//     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;    
+//     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;    
+//     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;   
+//     NVIC_Init(&NVIC_InitStructure);    
+      
+//     TIM_ITConfig(TIM5,TIM_IT_Update|TIM_IT_CC1,ENABLE);//打开更新中断和捕获中断  
+      
+//     TIM_Cmd(TIM5,ENABLE );  //使能定时器5  
+     
+// } 
 
 int main()
 {
