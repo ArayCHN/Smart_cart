@@ -75,9 +75,7 @@ void PendSV_Handler(void)
 {
 }
  
-void SysTick_Handler(void)
-{
-}
+void SysTick_Handler(void); // written in other files
 
 
 /******************************************************************************/

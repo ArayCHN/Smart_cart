@@ -8,16 +8,16 @@ void TIMx_PWMInit(uint16_t prescaler, uint16_t period, uint16_t pulse)
     /* GPIO settings below */
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE); // GPIO clock
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_speed_50MHz;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3;
     GPIO_Init(GPIOA, &GPIO_InitStructure);
     /* GPIO settings above */
     /* TIMx clock settings below */
-    RCC_APB1PeriphClockCmd(RCC_APB2Periph_TIM5, ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
     TIM_TimeBaseInitStructure.TIM_Prescaler = prescaler;
     TIM_TimeBaseInitStructure.TIM_Period = period;
     TIM_TimeBaseInitStructure.TIM_CounterMode = TIM_CounterMode_Up;
-    TIM_TimebaseInit(TIM5, &TIM_TimeBaseInitStructure);
+    TIM_TimeBaseInit(TIM5, &TIM_TimeBaseInitStructure);
     /* TIMx clock settings above */
     /* PWM config below */
     TimOCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
@@ -81,7 +81,7 @@ void EncodeInit(void)
 static int last_cnt, counts, v; // signed! cuz v can be negative
 inline int get_encoder_counts()
 {
-    counts = TIM -> CNT - last_cnt;
+    counts = TIM4 -> CNT - last_cnt;
     if (counts < - encoder_counter_reload / 2) // counter overflowed
         counts = encoder_counter_reload + v;
     last_cnt = TIM4 -> CNT;
@@ -146,7 +146,7 @@ void systickInit()
      
 // } 
 
-int main()
+int NOTmain()
 {
     uint16_t prescaler = 72 - 1; // 0~65535
     uint16_t period = 49;
@@ -154,5 +154,5 @@ int main()
     TIMx_PWMInit(prescaler, period, pulse); // set timer for motor
     systickInit();
     while (1);
-	return 0;
+	  return 0;
 }
