@@ -174,6 +174,7 @@ int main()
     uint16_t pulse = 30;
     TIMx_PWMInit(prescaler, period, pulse); // set timer for motor
 	  EncodeInit();
+	  //v = v;
     systickInit();
     while (1);
 	return 0;
