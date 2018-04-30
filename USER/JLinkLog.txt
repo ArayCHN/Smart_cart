@@ -340,3 +340,8 @@ T1D08 022:112 JLINK_ReadMem (0x2000000C, 0x0004 Bytes, ...) -- Read from C cache
 T1D08 022:113 JLINK_ReadMem (0x20000004, 0x0004 Bytes, ...) -- Read from C cache (4 bytes @ 0x20000004) - Data: 00 00 00 00  returns 0x00 (0000ms, 0695ms total)
 T1D08 022:114 JLINK_ReadMem (0x08000EA2, 0x0002 Bytes, ...) -- CPU_ReadMem(64 bytes @ 0x08000E80) -- Updating C cache (64 bytes @ 0x08000E80) -- Read from C cache (2 bytes @ 0x08000EA2) - Data: FE E7  returns 0x00 (0001ms, 0696ms total)
 T1D08 022:115 JLINK_ReadMem (0x08000EA4, 0x003C Bytes, ...) -- CPU_ReadMem(64 bytes @ 0x08000EC0) -- Updating C cache (64 bytes @ 0x08000EC0) -- Read from C cache (60 bytes @ 0x08000EA4) - Data: 08 00 00 20 30 B5 16 48 00 68 4F F4 7A 72 B0 FB ...  returns 0x00 (0002ms, 0698ms total)
+T384C 022:115 
+  ***** Error: Connection to emulator lost! (56067ms, 56765ms total)
+T1D08 368697:047 JLINK_Close() (0000ms, 0698ms total)
+T1D08 368697:047  (0000ms, 0698ms total)
+T1D08 368697:047 Closed (0000ms, 0698ms total)
