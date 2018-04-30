@@ -160,7 +160,7 @@
             <CpuDllArguments></CpuDllArguments>
             <PeripheralDll></PeripheralDll>
             <PeripheralDllArguments></PeripheralDllArguments>
-            <InitializationFile></InitializationFile>
+            <InitializationFile>.\JLink_debug.ini</InitializationFile>
             <Driver>Segger\JL2CM3.dll</Driver>
           </TargetDlls>
         </DebugOption>
@@ -224,7 +224,7 @@
             <hadIRAM2>0</hadIRAM2>
             <hadIROM2>0</hadIROM2>
             <StupSel>8</StupSel>
-            <useUlib>0</useUlib>
+            <useUlib>1</useUlib>
             <EndSel>0</EndSel>
             <uLtcg>0</uLtcg>
             <RoSelD>3</RoSelD>
@@ -422,6 +422,16 @@
               <FileName>system_stm32f10x.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\system_stm32f10x.c</FilePath>
+            </File>
+            <File>
+              <FileName>JLink_debug.ini</FileName>
+              <FileType>9</FileType>
+              <FilePath>.\JLink_debug.ini</FilePath>
+            </File>
+            <File>
+              <FileName>redirect.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\redirect.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -1,23 +1,5 @@
 #include "stm32f10x.h"
-/* #include <stdio.h> // for debug printf
-#define ITM_Port8(n) (*((volatile unsigned char *)(0xe0000000 + 4*n)))
-#define ITM_Port16(n) (*((volatile unsigned short *)(0xe0000000 + 4*n)))
-#define ITM_Port32(n) (*((volatile unsigned long *)(0xe0000000 + 4*n)))
-#define TRCENA 0x01000000
-#define DEMCR (*((volatile unsigned long *)(0xe000edfc)))
-struct __FILE {int handle;};
-//FILE __stdout;
-//FILE __stdin;
-int fputc(int ch, FILE *f)
-{ 
-	return ITM_SendChar(ch);
-	if (DEMCR & TRCENA)
-	{
-		while(ITM_Port32(0) == 0);
-		ITM_Port8(0) = ch;
-	}
-	return ch;
-} */
+#include <stdio.h>
 
 void TIMx_PWMInit(uint16_t prescaler, uint16_t period, uint16_t pulse)
 {
@@ -83,8 +65,10 @@ void EncodeInit(void)
     TIM4_TimeBaseStructure.TIM_RepetitionCounter = 0;
     TIM_TimeBaseInit(TIM4, &TIM4_TimeBaseStructure);
 
-    TIM_EncoderInterfaceConfig(TIM4, TIM_EncoderMode_TI12, TIM_ICPolarity_Rising,
-                               TIM_ICPolarity_Rising); // double rise or 4 times??
+    //TIM_EncoderInterfaceConfig(TIM4, TIM_EncoderMode_TI12, TIM_ICPolarity_Rising,
+     //                          TIM_ICPolarity_Rising); // double rise or 4 times??
+		TIM_EncoderInterfaceConfig(TIM4, TIM_EncoderMode_TI12, TIM_ICPolarity_BothEdge,
+                               TIM_ICPolarity_BothEdge);
 
     TIM_ICStructInit(&TIM4_ICInitStructure);
     TIM4_ICInitStructure.TIM_ICFilter = 6; // filter, choose what value?
@@ -104,21 +88,29 @@ int get_encoder_counts()
     counts = timer4cnt - last_cnt;
     if (counts < - encoder_counter_reload / 2) // counter overflowed
         counts += encoder_counter_reload;
+		else
+			if (counts > encoder_counter_reload / 2) // counter overflowed
+        counts -= encoder_counter_reload;
+		// printf("%d %d %d \n", last_cnt, timer4cnt, counts);
     last_cnt = TIM4 -> CNT;
     return counts;
 }
 
 // THESE PARSMS NEED TO BE CUSTOMIZED!
-#define spokes_num 13
-#define reduction_ratio 20
+#define spokes_num 11
+#define reduction_ratio 213 // reduction ratio = 21.3
 #define sysTick_period 50 // update v every 50ms
-#define wheel_perimeter 220 // in mm
+#define wheel_perimeter 210 // in mm
 
 extern void SysTick_Handler() // does "void" have to be written within ()?
 {
-    v = get_encoder_counts() * wheel_perimeter * 1000 / (spokes_num * reduction_ratio * sysTick_period); // update velocity
-    // v in mm/s; all vals must be signed int32 so that the multiplication doesn't overflow
-	  // printf("%d ", v);
+	  // NOTE: add 4 for every pulse in encoder! divide by 4 in the end!
+    // v = get_encoder_counts() * wheel_perimeter * 1000 / (spokes_num * reduction_ratio * sysTick_period * 4); // update velocity
+	  // v in mm/s; all vals must be signed int32 so that the multiplication doesn't overflow
+	  int den = spokes_num * reduction_ratio * sysTick_period * 4; // divide encoder counter by 4
+	  int num = get_encoder_counts() * wheel_perimeter * 1000 * 10; // *10 cuz reduction ratio is 21.3 instead of 213
+	  v = num / den;
+	  printf("%d \n", v);
     return;
 }
 
