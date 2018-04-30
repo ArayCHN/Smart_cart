@@ -1,4 +1,5 @@
 #include "stm32f10x.h"
+#include <stdio.h>
 
 void TIMx_PWMInit(uint16_t prescaler, uint16_t period, uint16_t pulse)
 {
@@ -52,20 +53,22 @@ void EncodeInit(void)
 
     /* Configure PB6, 7 */
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;       
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING; 
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING; // Problematic
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz; 
-    GPIO_Init(GPIOA, &GPIO_InitStructure);
+    GPIO_Init(GPIOB, &GPIO_InitStructure);
 
     /* Configure TIM4 */
-    TIM4_TimeBaseStructure.TIM_Prescaler = 0; // TIM clock = 72MHz        
+    TIM4_TimeBaseStructure.TIM_Prescaler = 0; // encoder signal as time source, do not prescale        
     TIM4_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
     TIM4_TimeBaseStructure.TIM_Period = encoder_counter_reload - 1; // what value?
     TIM4_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
     TIM4_TimeBaseStructure.TIM_RepetitionCounter = 0;
     TIM_TimeBaseInit(TIM4, &TIM4_TimeBaseStructure);
 
-    TIM_EncoderInterfaceConfig(TIM4, TIM_EncoderMode_TI12, TIM_ICPolarity_Rising,
-                               TIM_ICPolarity_Rising); // 配置编码器模式，4倍频??? 需要测试一下！是不是要改成双向计数！
+    //TIM_EncoderInterfaceConfig(TIM4, TIM_EncoderMode_TI12, TIM_ICPolarity_Rising,
+     //                          TIM_ICPolarity_Rising); // double rise or 4 times??
+        TIM_EncoderInterfaceConfig(TIM4, TIM_EncoderMode_TI12, TIM_ICPolarity_BothEdge,
+                               TIM_ICPolarity_BothEdge);
 
     TIM_ICStructInit(&TIM4_ICInitStructure);
     TIM4_ICInitStructure.TIM_ICFilter = 6; // filter, choose what value?
@@ -78,26 +81,36 @@ void EncodeInit(void)
     TIM_Cmd(TIM4, ENABLE);
 }
 
-static int last_cnt, counts, v; // signed! cuz v can be negative
-inline int get_encoder_counts()
+static int last_cnt, counts, v, timer4cnt; // signed! cuz v can be negative
+int get_encoder_counts()
 {
-    counts = TIM4 -> CNT - last_cnt;
+        timer4cnt = TIM4 -> CNT; // for debug
+    counts = timer4cnt - last_cnt;
     if (counts < - encoder_counter_reload / 2) // counter overflowed
-        counts = encoder_counter_reload + v;
+        counts += encoder_counter_reload;
+        else
+            if (counts > encoder_counter_reload / 2) // counter overflowed
+        counts -= encoder_counter_reload;
+        // printf("%d %d %d \n", last_cnt, timer4cnt, counts);
     last_cnt = TIM4 -> CNT;
     return counts;
 }
 
 // THESE PARSMS NEED TO BE CUSTOMIZED!
 #define spokes_num 11
-#define reduction_ratio 19.8
+#define reduction_ratio 213 // reduction ratio = 21.3
 #define sysTick_period 50 // update v every 50ms
-#define wheel_perimeter 220 // in mm
+#define wheel_perimeter 210 // in mm
 
-extern "C" void SysTick_Handler() // does "void" have to be written within ()?
+extern void SysTick_Handler() // does "void" have to be written within ()?
 {
-    v = get_encoder_counts() * wheel_perimeter * 1000 / (spokes_num * reduction_ratio * sysTick_period); // update velocity
-    // v in mm/s; all vals must be signed int32 so that the multiplication doesn't overflow
+      // NOTE: add 4 for every pulse in encoder! divide by 4 in the end!
+    // v = get_encoder_counts() * wheel_perimeter * 1000 / (spokes_num * reduction_ratio * sysTick_period * 4); // update velocity
+      // v in mm/s; all vals must be signed int32 so that the multiplication doesn't overflow
+      int den = spokes_num * reduction_ratio * sysTick_period * 4; // divide encoder counter by 4
+      int num = get_encoder_counts() * wheel_perimeter * 1000 * 10; // *10 cuz reduction ratio is 21.3 instead of 213
+      v = num / den;
+      printf("%d \n", v);
     return;
 }
 
@@ -106,53 +119,17 @@ void systickInit()
     SysTick_Config(SystemCoreClock / 1000 * sysTick_period); // SystemCoreClock == 72MHz
     return;
 }
-// 测试后把上面的代码扩展成两个轮子的！
-// 数脉冲宽度需要取五个或多个（维护队列）做平均滤波！
 
-/* initialize TIM8 for input detection for encoder  */
-// void TIM8_Cap_Init(u16 arr, u16 psc)
-// {      
-//     TIM_ICInitTypeDef  TIM5_ICInitStructure;
-//     TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
-//     NVIC_InitTypeDef NVIC_InitStructure;
-  
-//     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);    //使能TIM5时钟  
-      
-//     //TIM5的配置  
-//     TIM_TimeBaseStructure.TIM_Period = arr;     //重装载值  
-//     TIM_TimeBaseStructure.TIM_Prescaler =psc;   //分频系数   
-//     TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;      //tDTS = tCK_INT  
-//     TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;  //向上计数  
-//     TIM_TimeBaseInit(TIM5, &TIM_TimeBaseStructure);   
-    
-//     //TIM5输入捕获配置  
-//     TIM5_ICInitStructure.TIM_Channel = TIM_Channel_1; //我们用通道1  
-//     TIM5_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;    //上升沿捕获  
-//     TIM5_ICInitStructure.TIM_ICSelection = TIM_ICSelection_DirectTI; //映射到TI1  
-//     TIM5_ICInitStructure.TIM_ICPrescaler = TIM_ICPSC_DIV1;   //无预分频器   
-//     TIM5_ICInitStructure.TIM_ICFilter = 0x00; //IC1F=0000 ，无滤波器  
-//     TIM_ICInit(TIM5, &TIM5_ICInitStructure);  
-      
-//     //中断优先级配置  
-//     NVIC_InitStructure.NVIC_IRQChannel = TIM5_IRQn;    
-//     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;    
-//     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;    
-//     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;   
-//     NVIC_Init(&NVIC_InitStructure);    
-      
-//     TIM_ITConfig(TIM5,TIM_IT_Update|TIM_IT_CC1,ENABLE);//打开更新中断和捕获中断  
-      
-//     TIM_Cmd(TIM5,ENABLE );  //使能定时器5  
-     
-// } 
 
-int NOTmain()
+int test()
 {
     uint16_t prescaler = 72 - 1; // 0~65535
     uint16_t period = 49;
     uint16_t pulse = 30;
     TIMx_PWMInit(prescaler, period, pulse); // set timer for motor
+    EncodeInit();
+    //v = v;
     systickInit();
     while (1);
-	  return 0;
+    return 0;
 }
