@@ -55,9 +55,9 @@ Due to the limited pins offered by the boarder vendor, I have to find another wa
 
 **A list of useful resources:**
 
-*[for timer1 and 8, the interrupt process is different from general timers](https://blog.csdn.net/qq_14997473/article/details/46942927)
-*[timer interrupt config overview and explanation, without GPIO input](https://blog.csdn.net/longintchar/article/details/43453393)
-*[an example of timer interrupt with GPIO input as capture source](https://blog.csdn.net/mvp_dong/article/details/43120533)
+* [for timer1 and 8, the interrupt process is different from general timers](https://blog.csdn.net/qq_14997473/article/details/46942927)
+* [timer interrupt config overview and explanation, without GPIO input](https://blog.csdn.net/longintchar/article/details/43453393)
+* [an example of timer interrupt with GPIO input as capture source](https://blog.csdn.net/mvp_dong/article/details/43120533)
 
 **Important tips:**
 
