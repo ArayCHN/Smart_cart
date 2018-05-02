@@ -77,6 +77,7 @@ void PendSV_Handler(void)
  
 void SysTick_Handler(void); // written in other files
 void TIM8_CC_IRQHandler();
+void TIM8_UP_IRQHandler();
 
 
 /******************************************************************************/

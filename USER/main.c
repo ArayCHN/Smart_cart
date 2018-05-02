@@ -65,8 +65,6 @@ void EncodeInit(void)
     TIM4_TimeBaseStructure.TIM_RepetitionCounter = 0;
     TIM_TimeBaseInit(TIM4, &TIM4_TimeBaseStructure);
 
-    //TIM_EncoderInterfaceConfig(TIM4, TIM_EncoderMode_TI12, TIM_ICPolarity_Rising,
-     //                          TIM_ICPolarity_Rising); // double rise or 4 times??
 	TIM_EncoderInterfaceConfig(TIM4, TIM_EncoderMode_TI12, TIM_ICPolarity_BothEdge,
                                TIM_ICPolarity_BothEdge);
 
@@ -122,26 +120,28 @@ void systickInit()
 }
 
 /* initialize TIM8 for input detection for encoder  */
+#define time_interval_reload 60000
+#define time_interval_prescaler 100
 void TIM8_Cap_Init() // capture mode
 {      
     TIM_ICInitTypeDef  TIM8_ICInitStructure;
     TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
-	  GPIO_InitTypeDef GPIO_InitStructure;
+    GPIO_InitTypeDef GPIO_InitStructure;
 
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, ENABLE);  
-	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
 
     /* Configure PC8, 9 */
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;       
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD; // pull-down
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz; 
     GPIO_Init(GPIOC, &GPIO_InitStructure);
-	  GPIO_ResetBits(GPIOC, GPIO_Pin_8 | GPIO_Pin_9);
+    GPIO_ResetBits(GPIOC, GPIO_Pin_8 | GPIO_Pin_9);
 
     // Below: TIM8 init, must be the same as TIM8 init in encoder mode!
-    TIM_TimeBaseStructure.TIM_Period = encoder_counter_reload - 1;
-    TIM_TimeBaseStructure.TIM_Prescaler = 0;
+    TIM_TimeBaseStructure.TIM_Period = time_interval_reload - 1;
+    TIM_TimeBaseStructure.TIM_Prescaler = time_interval_prescaler - 1; // down to 720000 Hz
     TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1; //tDTS = tCK_INT  
     TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
     TIM_TimeBaseStructure.TIM_RepetitionCounter = 0; // only for TIM1 and 8
@@ -151,23 +151,29 @@ void TIM8_Cap_Init() // capture mode
     TIM8_ICInitStructure.TIM_Channel = TIM_Channel_3; 
     TIM8_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising; 
     TIM8_ICInitStructure.TIM_ICSelection = TIM_ICSelection_DirectTI;
-    TIM8_ICInitStructure.TIM_ICPrescaler = TIM_ICPSC_DIV8; // prescale input signal, capture performs every 8 events
-    TIM8_ICInitStructure.TIM_ICFilter = 0x03; // filter: < 72/4 Hz, T > 111 ns
+    TIM8_ICInitStructure.TIM_ICPrescaler = TIM_ICPSC_DIV4; // prescale input signal, capture performs every 4 events
+    TIM8_ICInitStructure.TIM_ICFilter = 0; // filter: 0
     TIM_ICInit(TIM8, &TIM8_ICInitStructure);
-      
+    
     // interuption config
-    NVIC_InitStructure.NVIC_IRQChannel = TIM8_CC_IRQn;    
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1; // lower than systick (0) cuz this vel updates much faster   
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannel = TIM8_CC_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2; // lower than systick (0) cuz this vel updates much faster   
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;   
     NVIC_Init(&NVIC_InitStructure);
-    
-    TIM_ITConfig(TIM8, TIM_IT_CC3|TIM_IT_CC4, ENABLE); // channel 3, 4
+
+    NVIC_InitStructure.NVIC_IRQChannel = TIM8_UP_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+    NVIC_Init(&NVIC_InitStructure);
+
+    TIM_ITConfig(TIM8, TIM_IT_CC3|TIM_IT_CC4|TIM_IT_Update, ENABLE); // channel 3, 4
     TIM_Cmd(TIM8, ENABLE);
 }
 
-static int cnt_ch3, prev_cnt_ch3 = -1, cnt_ch4, prev_cnt_ch4 = -1, delta_t3, delta_t4; // prev_cnt init -1 to prevent den==0
+static int cnt_ch3, prev_cnt_ch3 = -1, cnt_ch4, prev_cnt_ch4 = -1, delta_t3, delta_t4, cycles3, cycles4; // prev_cnt init -1 to prevent den==0
 u32 v3, v4, num, den;
+// cycles: the cycles of reloading in TIM. cuz there might have been multiple cycles between two interrupts!
 
 extern void TIM8_CC_IRQHandler()
 {
@@ -175,39 +181,51 @@ extern void TIM8_CC_IRQHandler()
     {
         TIM_ClearITPendingBit(TIM1, TIM_IT_CC3);
         cnt_ch3 = TIM_GetCapture3(TIM8);
-        delta_t3 = cnt_ch3 - prev_cnt_ch3;
+        if (cycles3 > 5) // have been waiting for too long (~0.5s) w/o interupt
+        {
+            v3 = 0; // cart has stopped for too long
+            return;
+        }
+        delta_t3 =  cycles3 * time_interval_reload + cnt_ch3 - prev_cnt_ch3;
         prev_cnt_ch3 = cnt_ch3;
-        if (delta_t3 < - encoder_counter_reload / 2) // counter overflowed
-            delta_t3 += encoder_counter_reload;
-        else
-        if (delta_t3 > encoder_counter_reload / 2) // counter overflowed
-            delta_t3 -= encoder_counter_reload;
+        cycles3 = 0;
 
-        num = (u32)(wheel_perimeter) * 72000000; // almost overflows u32, can't multiply anything more
-        den = spokes_num * (reduction_ratio / 10) * (delta_t3 / 8);
-        // Note! have to sacrifice 21.3 -> 21 becuz wheel_perimeter*72000000 * 10 will overflow int32!
+        num = (u32)(wheel_perimeter) * (u32)(SystemCoreClock / time_interval_prescaler) * 10;
+        den = spokes_num * reduction_ratio * (delta_t3 / 4);
         v3 = num / den;
-        printf("v3:%d \n", v3);
     }
     else if (TIM_GetITStatus(TIM8, TIM_IT_CC4) == SET)
     {
         TIM_ClearITPendingBit(TIM1, TIM_IT_CC4);
         cnt_ch4 = TIM_GetCapture4(TIM8);
-        delta_t4 = cnt_ch4 - prev_cnt_ch4;
+        if (cycles4 > 5) // have been waiting for too long (~0.5s) w/o interupt
+        {
+            v4 = 0; // cart has stopped for too long
+            return;
+        }
+        delta_t4 =  cycles4 * time_interval_reload + cnt_ch4 - prev_cnt_ch4;
         prev_cnt_ch4 = cnt_ch4;
-        if (delta_t4 < - encoder_counter_reload / 2) // counter overflowed
-            delta_t4 += encoder_counter_reload;
-        else
-        if (delta_t4 > encoder_counter_reload / 2) // counter overflowed
-            delta_t4 -= encoder_counter_reload;
+        cycles4 = 0;
 
-        num = (u32)(wheel_perimeter) * 72000000; // change 72000000, don't directly use a number!
-        den = spokes_num * (reduction_ratio/10) * (delta_t4 / 5);
-        // Note! have to sacrifice 21.3 -> 21 becuz wheel_perimeter*72000000 * 10 will overflow int32!
+        num = (u32)(wheel_perimeter) * (u32)(SystemCoreClock / time_interval_prescaler) * 10;
+        den = spokes_num * reduction_ratio * (delta_t4 / 4);
         v4 = num / den;
     }
     else; // other interrupt?? do nothing! how come there is other interrupt?
-} 
+    printf("v3:%d    v4:\n", v3, v4); // debug
+    return;
+}
+
+extern void TIM8_UP_IRQHandler() // runs every 0.083s. acceptable
+{
+    if (TIM_GetITStatus(TIM8, TIM_IT_Update) == SET)
+    {
+        cycles3 ++;
+        cycles4 ++;
+        TIM_ClearITPendingBit(TIM1, TIM_IT_Update);
+    }
+    return;
+}
 
 int main()
 {

@@ -2,3 +2,10 @@
 *.Rui
 JLinkLog.txt
 *.o
+*.uvoptx
+*.uvprojx
+*.map
+*.axf
+*.hex
+*.dep
+*.crf
