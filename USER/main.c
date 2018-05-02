@@ -89,7 +89,6 @@ int get_encoder_counts()
 		else
 			if (counts > encoder_counter_reload / 2) // counter overflowed
         counts -= encoder_counter_reload;
-		// printf("%d %d %d \n", last_cnt, timer4cnt, counts);
     last_cnt = TIM4 -> CNT;
     return counts;
 }
@@ -155,8 +154,8 @@ void TIM8_Cap_Init() // capture mode
     TIM8_ICInitStructure.TIM_ICPrescaler = TIM_ICPSC_DIV4; // prescale input signal, capture performs every 4 events
     TIM8_ICInitStructure.TIM_ICFilter = 0; // filter: 0
     TIM_ICInit(TIM8, &TIM8_ICInitStructure);
-		TIM8_ICInitStructure.TIM_Channel = TIM_Channel_4;
-		TIM_ICInit(TIM8, &TIM8_ICInitStructure);
+    TIM8_ICInitStructure.TIM_Channel = TIM_Channel_4;
+    TIM_ICInit(TIM8, &TIM8_ICInitStructure);
     
     // interuption config
     NVIC_InitStructure.NVIC_IRQChannel = TIM8_CC_IRQn;
@@ -220,9 +219,17 @@ extern void TIM8_UP_IRQHandler() // runs every 0.083s. acceptable
     if (TIM_GetITStatus(TIM8, TIM_IT_Update) == SET)
     {
         cycles3 ++;
-			if (cycles3 > 5) {v3 = 0; if (cycles3 > 10) cycles3 = 10; }
+        if (cycles3 > 5)
+            {
+                v3 = 0;
+                if (cycles3 > 10) cycles3 = 10;
+            }
         cycles4 ++;
-			if (cycles4 > 5) {v4 = 0; if (cycles4 > 10) cycles4 = 10; }
+        if (cycles4 > 5)
+            {
+                v4 = 0;
+                if (cycles4 > 10) cycles4 = 10;
+            }
         TIM_ClearITPendingBit(TIM8, TIM_IT_Update);
     }
     return;
@@ -236,9 +243,9 @@ int main()
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2); // priority group config, 2 bits preemption, 2 bits sub
     // priority group config must be before anything!
     TIMx_PWMInit(prescaler, period, pulse); // set timer for motor PWM
-	  EncodeInit(); // use encoder mode for motor
+    EncodeInit(); // use encoder mode for motor
     systickInit(); // encoder mode interupt (in fact, exception)
     TIM8_Cap_Init();
     while (1);
-	return 0;
+    return 0;
 }
