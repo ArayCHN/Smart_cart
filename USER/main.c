@@ -109,6 +109,7 @@ extern void SysTick_Handler() // does "void" have to be written within ()?
 	int num = get_encoder_counts() * wheel_perimeter * 1000 * 10; // *10 cuz reduction ratio is 21.3 instead of 213
 	v = num / den;
 	//printf("%d \n", v);
+	//printf("v3:%d    v4: %d\n", v3, v4);
     return;
 }
 
@@ -134,7 +135,7 @@ void TIM8_Cap_Init() // capture mode
 
     /* Configure PC8, 9 */
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;       
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD; // pull-down
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD; // pull-down input
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz; 
     GPIO_Init(GPIOC, &GPIO_InitStructure);
     GPIO_ResetBits(GPIOC, GPIO_Pin_8 | GPIO_Pin_9);
@@ -154,9 +155,12 @@ void TIM8_Cap_Init() // capture mode
     TIM8_ICInitStructure.TIM_ICPrescaler = TIM_ICPSC_DIV4; // prescale input signal, capture performs every 4 events
     TIM8_ICInitStructure.TIM_ICFilter = 0; // filter: 0
     TIM_ICInit(TIM8, &TIM8_ICInitStructure);
+		TIM8_ICInitStructure.TIM_Channel = TIM_Channel_4;
+		TIM_ICInit(TIM8, &TIM8_ICInitStructure);
     
     // interuption config
     NVIC_InitStructure.NVIC_IRQChannel = TIM8_CC_IRQn;
+		
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2; // lower than systick (0) cuz this vel updates much faster   
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;   
@@ -179,30 +183,26 @@ extern void TIM8_CC_IRQHandler()
 {
     if (TIM_GetITStatus(TIM8, TIM_IT_CC3) == SET) // if it is channel 3
     {
-        TIM_ClearITPendingBit(TIM1, TIM_IT_CC3);
+        TIM_ClearITPendingBit(TIM8, TIM_IT_CC3);
         cnt_ch3 = TIM_GetCapture3(TIM8);
-        if (cycles3 > 5) // have been waiting for too long (~0.5s) w/o interupt
-        {
-            v3 = 0; // cart has stopped for too long
-            return;
-        }
         delta_t3 =  cycles3 * time_interval_reload + cnt_ch3 - prev_cnt_ch3;
-        prev_cnt_ch3 = cnt_ch3;
-        cycles3 = 0;
-
+        
+        
         num = (u32)(wheel_perimeter) * (u32)(SystemCoreClock / time_interval_prescaler) * 10;
         den = spokes_num * reduction_ratio * (delta_t3 / 4);
         v3 = num / den;
+			  if (v3 > 1000)
+				{
+					v3 = v3;
+				}
+				cycles3 = 0;
+				prev_cnt_ch3 = cnt_ch3;
+			printf("v3:%d    v4: %d\n", v3, v4); // debug
     }
     else if (TIM_GetITStatus(TIM8, TIM_IT_CC4) == SET)
     {
-        TIM_ClearITPendingBit(TIM1, TIM_IT_CC4);
+        TIM_ClearITPendingBit(TIM8, TIM_IT_CC4);
         cnt_ch4 = TIM_GetCapture4(TIM8);
-        if (cycles4 > 5) // have been waiting for too long (~0.5s) w/o interupt
-        {
-            v4 = 0; // cart has stopped for too long
-            return;
-        }
         delta_t4 =  cycles4 * time_interval_reload + cnt_ch4 - prev_cnt_ch4;
         prev_cnt_ch4 = cnt_ch4;
         cycles4 = 0;
@@ -212,7 +212,6 @@ extern void TIM8_CC_IRQHandler()
         v4 = num / den;
     }
     else; // other interrupt?? do nothing! how come there is other interrupt?
-    printf("v3:%d    v4:\n", v3, v4); // debug
     return;
 }
 
@@ -221,8 +220,10 @@ extern void TIM8_UP_IRQHandler() // runs every 0.083s. acceptable
     if (TIM_GetITStatus(TIM8, TIM_IT_Update) == SET)
     {
         cycles3 ++;
+			if (cycles3 > 5) {v3 = 0; if (cycles3 > 10) cycles3 = 10; }
         cycles4 ++;
-        TIM_ClearITPendingBit(TIM1, TIM_IT_Update);
+			if (cycles4 > 5) {v4 = 0; if (cycles4 > 10) cycles4 = 10; }
+        TIM_ClearITPendingBit(TIM8, TIM_IT_Update);
     }
     return;
 }
@@ -235,7 +236,7 @@ int main()
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2); // priority group config, 2 bits preemption, 2 bits sub
     // priority group config must be before anything!
     TIMx_PWMInit(prescaler, period, pulse); // set timer for motor PWM
-	EncodeInit(); // use encoder mode for motor
+	  EncodeInit(); // use encoder mode for motor
     systickInit(); // encoder mode interupt (in fact, exception)
     TIM8_Cap_Init();
     while (1);
