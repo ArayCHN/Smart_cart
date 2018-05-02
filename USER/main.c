@@ -110,7 +110,7 @@ extern void SysTick_Handler() // does "void" have to be written within ()?
 	int den = spokes_num * reduction_ratio * sysTick_period * 4; // divide encoder counter by 4
 	int num = get_encoder_counts() * wheel_perimeter * 1000 * 10; // *10 cuz reduction ratio is 21.3 instead of 213
 	v = num / den;
-	printf("%d \n", v);
+	//printf("%d \n", v);
     return;
 }
 
@@ -126,8 +126,19 @@ void TIM8_Cap_Init() // capture mode
 {      
     TIM_ICInitTypeDef  TIM8_ICInitStructure;
     TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
+    NVIC_InitTypeDef NVIC_InitStructure;
+	  GPIO_InitTypeDef GPIO_InitStructure;
 
-    RCC_APB1PeriphClockCmd(RCC_APB2Periph_TIM8, ENABLE);  
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, ENABLE);  
+	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
+
+    /* Configure PC8, 9 */
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;       
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD; // pull-down
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz; 
+    GPIO_Init(GPIOC, &GPIO_InitStructure);
+	  GPIO_ResetBits(GPIOC, GPIO_Pin_8 | GPIO_Pin_9);
+
     // Below: TIM8 init, must be the same as TIM8 init in encoder mode!
     TIM_TimeBaseStructure.TIM_Period = encoder_counter_reload - 1;
     TIM_TimeBaseStructure.TIM_Prescaler = 0;
@@ -145,7 +156,6 @@ void TIM8_Cap_Init() // capture mode
     TIM_ICInit(TIM8, &TIM8_ICInitStructure);
       
     // interuption config
-    NVIC_InitTypeDef NVIC_InitStructure;
     NVIC_InitStructure.NVIC_IRQChannel = TIM8_CC_IRQn;    
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1; // lower than systick (0) cuz this vel updates much faster   
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
@@ -156,7 +166,8 @@ void TIM8_Cap_Init() // capture mode
     TIM_Cmd(TIM8, ENABLE);
 }
 
-static int cnt_ch3, prev_cnt_ch3 = -1, cnt_ch4 prev_cnt_ch4 = -1; // prev_cnt init -1 to prevent den==0
+static int cnt_ch3, prev_cnt_ch3 = -1, cnt_ch4, prev_cnt_ch4 = -1, delta_t3, delta_t4; // prev_cnt init -1 to prevent den==0
+u32 v3, v4, num, den;
 
 extern void TIM8_CC_IRQHandler()
 {
@@ -164,7 +175,7 @@ extern void TIM8_CC_IRQHandler()
     {
         TIM_ClearITPendingBit(TIM1, TIM_IT_CC3);
         cnt_ch3 = TIM_GetCapture3(TIM8);
-        int delta_t3 = cnt_ch3 - prev_cnt_ch3;
+        delta_t3 = cnt_ch3 - prev_cnt_ch3;
         prev_cnt_ch3 = cnt_ch3;
         if (delta_t3 < - encoder_counter_reload / 2) // counter overflowed
             delta_t3 += encoder_counter_reload;
@@ -172,17 +183,17 @@ extern void TIM8_CC_IRQHandler()
         if (delta_t3 > encoder_counter_reload / 2) // counter overflowed
             delta_t3 -= encoder_counter_reload;
 
-        int num = wheel_perimeter * 72000000; // almost overflows int32, can't multiply anything more
-        int den = spokes_num * (reduction_ratio / 10) * (delta_t3 / 8);
+        num = (u32)(wheel_perimeter) * 72000000; // almost overflows u32, can't multiply anything more
+        den = spokes_num * (reduction_ratio / 10) * (delta_t3 / 8);
         // Note! have to sacrifice 21.3 -> 21 becuz wheel_perimeter*72000000 * 10 will overflow int32!
         v3 = num / den;
         printf("v3:%d \n", v3);
     }
-    else if TIM_GetITStatus(TIM8, TIM_IT_CC4) == SET
+    else if (TIM_GetITStatus(TIM8, TIM_IT_CC4) == SET)
     {
         TIM_ClearITPendingBit(TIM1, TIM_IT_CC4);
         cnt_ch4 = TIM_GetCapture4(TIM8);
-        int delta_t4 = cnt_ch4 - prev_cnt_ch4;
+        delta_t4 = cnt_ch4 - prev_cnt_ch4;
         prev_cnt_ch4 = cnt_ch4;
         if (delta_t4 < - encoder_counter_reload / 2) // counter overflowed
             delta_t4 += encoder_counter_reload;
@@ -190,8 +201,8 @@ extern void TIM8_CC_IRQHandler()
         if (delta_t4 > encoder_counter_reload / 2) // counter overflowed
             delta_t4 -= encoder_counter_reload;
 
-        int num = wheel_perimeter * 72000000; // change 72000000, don't directly use a number!
-        int den = spokes_num * (reduction_ratio/10) * (delta_t4 / 5);
+        num = (u32)(wheel_perimeter) * 72000000; // change 72000000, don't directly use a number!
+        den = spokes_num * (reduction_ratio/10) * (delta_t4 / 5);
         // Note! have to sacrifice 21.3 -> 21 becuz wheel_perimeter*72000000 * 10 will overflow int32!
         v4 = num / den;
     }
@@ -208,7 +219,7 @@ int main()
     TIMx_PWMInit(prescaler, period, pulse); // set timer for motor PWM
 	EncodeInit(); // use encoder mode for motor
     systickInit(); // encoder mode interupt (in fact, exception)
-    TIM8_Cap_Init(9999, 0);
+    TIM8_Cap_Init();
     while (1);
 	return 0;
 }

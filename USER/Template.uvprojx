@@ -424,34 +424,9 @@
               <FilePath>.\system_stm32f10x.c</FilePath>
             </File>
             <File>
-              <FileName>JLink_debug.ini</FileName>
-              <FileType>9</FileType>
-              <FilePath>.\JLink_debug.ini</FilePath>
-            </File>
-            <File>
-              <FileName>redirect.c</FileName>
+              <FileName>retarget.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\redirect.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>SYSTEM</GroupName>
-          <Files>
-            <File>
-              <FileName>delay.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\SYSTEM\delay\delay.c</FilePath>
-            </File>
-            <File>
-              <FileName>sys.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\SYSTEM\sys\sys.c</FilePath>
-            </File>
-            <File>
-              <FileName>usart.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\SYSTEM\usart\usart.c</FilePath>
+              <FilePath>.\retarget.c</FilePath>
             </File>
           </Files>
         </Group>
