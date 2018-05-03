@@ -76,14 +76,20 @@ void Ultrasonic_Init(void)
     NVIC_Init(&NVIC_InitStructure);
 }
 
+void delay_us(u16 delay_time)
+{   
+    u16 i, j;  
+    for (i = 0; i < delay_time; i++)  
+        for (j = 0; j < 9; j++);  
+}
+
 void Ultrasonic_Trig(void)
 {
     if (!bounce_flag) obstacle_mode_flag = NONE;
     bounce_flag = 0; // record if ultrasonic wave bounced back in the last emission within time threshold
     GPIO_WriteBit(GPIOE, GPIO_Pin_0, Bit_SET);
     GPIO_WriteBit(GPIOE, GPIO_Pin_2, Bit_SET);
-    delay_us(15); // HOW to delay??
-    // disable interruption here!!! to ensure not-too-large delay!
+    delay_us(15); // HOW to delay?
     GPIO_WriteBit(GPIOE, GPIO_Pin_0, Bit_RESET);
     GPIO_WriteBit(GPIOE, GPIO_Pin_2, Bit_RESET);
     return;
