@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include "macros.h"
 
+extern int last_cnt, counts, v, timer4cnt; // signed! cuz v can be negative
+
 void EncodeInit(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure; // PB6, PB7
@@ -39,8 +41,6 @@ void EncodeInit(void)
     TIM_SetCounter(TIM4, 0); // TIM4 -> CNT = 0
     TIM_Cmd(TIM4, ENABLE);
 }
-
-extern static int last_cnt, counts, v, timer4cnt; // signed! cuz v can be negative
 
 int get_encoder_counts()
 {

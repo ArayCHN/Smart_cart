@@ -80,6 +80,7 @@ void TIM8_CC_IRQHandler(void);
 void TIM8_UP_IRQHandler(void);
 void TIM2_IRQHandler(void);
 void TIM6_IRQHandler(void);
+void TIM4_IRQHandler(void);
 
 /******************************************************************************/
 /*                 STM32F10x Peripherals Interrupt Handlers                   */

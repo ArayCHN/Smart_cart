@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "macros.h"
 
-extern static int cnt_ch3, prev_cnt_ch3, cnt_ch4, prev_cnt_ch4, delta_t3, delta_t4, cycles3, cycles4;
+extern int cnt_ch3, prev_cnt_ch3, cnt_ch4, prev_cnt_ch4, delta_t3, delta_t4, cycles3, cycles4;
 extern u32 v3, v4, num, den;
 
 extern void TIM8_CC_IRQHandler()

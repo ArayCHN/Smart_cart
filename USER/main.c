@@ -6,13 +6,14 @@ void TIMx_PWMInit(uint16_t prescaler, uint16_t period, uint16_t pulse);
 
 void EncodeInit(void);
 
-static int last_cnt, counts, v, timer4cnt; // signed! cuz v can be negative
-int get_encoder_counts();
+int last_cnt = 0, counts = 0, v = 0, timer4cnt = 0; // signed! cuz v can be negative
+int get_encoder_counts(void);
 
 void TIM8_Cap_Init(void); // init for time interval method; need to change to TIM1! in motor_vel_time_interval.c
 
 // vars for time interval method
-static int cnt_ch3, prev_cnt_ch3 = -1, cnt_ch4, prev_cnt_ch4 = -1, delta_t3, delta_t4, cycles3, cycles4; // prev_cnt init -1 to prevent den==0
+int cnt_ch3 = 0, prev_cnt_ch3 = -1, cnt_ch4 = 0, prev_cnt_ch4 = -1, 
+	  delta_t3 = 0, delta_t4 = 0, cycles3 = 0, cycles4 = 0; // prev_cnt init -1 to prevent den==0
 u32 v3, v4, num, den;
 // cycles: the cycles of reloading in TIM. cuz there might have been multiple cycles between two interrupts!
 
@@ -23,7 +24,7 @@ void Ultrasonic_Init(void);
 void Ultrasonic_Trig(void);
 
 // below: systick, whose exception mechanism is shared among several devices
-static u8 ultra_cnt;
+static u8 ultra_cnt; // only visible in main.c
 extern void SysTick_Handler()
 {
     // v = get_encoder_counts() * wheel_perimeter * 1000 / (spokes_num * reduction_ratio * sysTick_period * 4); // update velocity
@@ -36,6 +37,17 @@ extern void SysTick_Handler()
     if (ultra_cnt == 0) Ultrasonic_Trig(); // ultrasonic update frequency = 1/2 * encoder vel update freq
     // printf("%d \n", v); // debug
     // printf("v3:%d    v4: %d\n", v3, v4); // debug
+//	  if (obstacle_mode_flag == NONE_OBSTACLE)
+//        {
+//            printf("none!\n");
+//        }
+//        else
+//        {
+//            if (obstacle_mode_flag == RIGHT_OBSTACLE)
+//                printf("right!\n");
+//            else
+//               printf("left!\n");
+//        }
     return;
 }
 
@@ -62,16 +74,17 @@ int main()
 
     while (1)
     {
+			printf("%d ", TIM2->CNT);
         if (obstacle_mode_flag == NONE_OBSTACLE)
         {
-            printf("none!\n");
+            //printf("none!\n");
         }
         else
         {
-            if (obstacle_mode_flag == RIGHT_OBSTACLE)
-                printf("right!\n");
-            else
-                printf("left!\n");
+            //if (obstacle_mode_flag == RIGHT_OBSTACLE)
+            //    printf("right!\n");
+            //else
+            //   printf("left!\n");
         }
     }
     return 0;
