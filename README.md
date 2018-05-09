@@ -68,6 +68,31 @@ Due to the limited pins offered by the boarder vendor, I have to find another wa
 
 **unsolved: 一个奇怪的问题：在一些时候，当速度为0好久，然后启动一下，一瞬间速度会很小，紧接着接下来就会出现一个很大的速度。这个速度是错误的，但是为什么会得到这个结果？**
 
+### ULTRASONIC MODULE TEST
+We use an ultrasonic module **HC-SR04** to check if there is an obstacle nearby. The ultrasonic module emits a wave when the pin TRIGGER is high for >10 us. The pin ECHO receives a high for a time t, meaning that the time sound travelled was t.
+
+We trigger a timer to record time when rising edge is detected, and stop recording when falling edge is detected.
+
+There are two things worth noting here. First, since there are two ultrasonic modules and we need to know whether the obstacle is on the left side or the right side, a little logistic is needed. We need some flags to mark if it is the left, right or no ultrasonic module that has detected an obstacle within a certain distance. Once we detected an obstacle, we will record the current state in a global variable for our control algorithm to recognize.
+
+Second, different from most examples found online, in our implementation we are not interested in exactly how far away the obstacle is. Rather, we are concerned about whether that distance exceeds a specific _threshold_. For example, let us set the threshold at 50cm. Now the simplest way is when we configure our timer, we let it have a period that accords with a distance of 50cm. Now if the timer ever experiences reloading during a trigger-and-echo process, the distance can directly be determined to be above that threshold. Therefore, there is no need to do extra calculation, which saves our time.
+
+An example: timer prescaler = 72.
+
+72000000 / 72 = 1000000, 1ms = 1000 counts. period = 3000
+
+This will result in a rough distance threshold of 510mm.
+
+**A list of useful resources:**
+
+* [neat code, but not good implementation in that the author did not use interrupt, but wait until signal comes. Not suitable in our case.](https://blog.csdn.net/zhangdaxia2/article/details/50783566)
+* [Used interruption mechanism, but there are some minor unnecessities in code.](https://blog.csdn.net/tcjy1000/article/details/70170058)
+
+
+**Important tips:**
+
+* the ultrasonic module must be connected to a voltage source of 5V, not 3.3V! Otherwise there might be weird problems such as a lot of wrong rising edges on the ECHO pin.
+* The time interval between 2 trigger should be longer than 60ms. Otherwise, the echos and triggers will overlap and it is impossible to distinguish which echo is paired with which trigger.
 
 ## List of files under  /USER
 ```
