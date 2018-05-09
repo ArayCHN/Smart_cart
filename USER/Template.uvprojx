@@ -428,6 +428,26 @@
               <FileType>1</FileType>
               <FilePath>.\retarget.c</FilePath>
             </File>
+            <File>
+              <FileName>motor_pwm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\motor_pwm.c</FilePath>
+            </File>
+            <File>
+              <FileName>motor_vel_encoder_mode.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\motor_vel_encoder_mode.c</FilePath>
+            </File>
+            <File>
+              <FileName>motor_vel_time_interval.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\motor_vel_time_interval.c</FilePath>
+            </File>
+            <File>
+              <FileName>ultrasonic.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ultrasonic.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

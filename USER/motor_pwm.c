@@ -26,10 +26,10 @@ void TIMx_PWMInit(uint16_t prescaler, uint16_t period, uint16_t pulse)
     TimOCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
     TimOCInitStructure.TIM_Pulse = pulse; // pulse evaluate
     TimOCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-    TIM_OC1Init(TIM1, &TimOCInitStructure);
-    TIM_OC2Init(TIM1, &TimOCInitStructure);
-    TIM_OC3Init(TIM1, &TimOCInitStructure);
-    TIM_OC4Init(TIM1, &TimOCInitStructure); // channel 1-4 config
+    TIM_OC1Init(TIM5, &TimOCInitStructure);
+    TIM_OC2Init(TIM5, &TimOCInitStructure);
+    TIM_OC3Init(TIM5, &TimOCInitStructure);
+    TIM_OC4Init(TIM5, &TimOCInitStructure); // channel 1-4 config
     TIM_OC1PreloadConfig(TIM5, TIM_OCPreload_Enable);
     TIM_OC2PreloadConfig(TIM5, TIM_OCPreload_Enable);
     TIM_OC3PreloadConfig(TIM5, TIM_OCPreload_Enable);

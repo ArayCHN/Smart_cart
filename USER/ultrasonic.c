@@ -91,6 +91,7 @@ void delay_us(u16 delay_time)
         for (j = 0; j < 9; j++);  
 }
 
+int debug = 0;
 void Ultrasonic_Trig(void)
 {
     if (!bounce_flag) obstacle_mode_flag = NONE_OBSTACLE;
@@ -101,12 +102,18 @@ void Ultrasonic_Trig(void)
     GPIO_WriteBit(GPIOE, GPIO_Pin_0, Bit_RESET);
     GPIO_WriteBit(GPIOE, GPIO_Pin_2, Bit_RESET);
     return;
+//	debug = 1 - debug;
+//	if (debug)
+//	GPIO_WriteBit(GPIOE, GPIO_Pin_2, Bit_SET);
+//	else
+//		GPIO_WriteBit(GPIOE, GPIO_Pin_2, Bit_RESET);
 }
 
 void EXTI1_IRQHandler(void)
 {
     if (EXTI_GetITStatus(EXTI_Line1) != RESET)
     {
+			EXTI_ClearITPendingBit(EXTI_Line1);
         if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_1) == 1) // rising edge  
         {
             TIM_SetCounter(TIM2, 0);
@@ -125,9 +132,9 @@ void EXTI1_IRQHandler(void)
                     bounce_flag = 1;
                 }
                 ultra_record_flag_l = 0;
+								// printf(" %d ", TIM2->CNT);
             }
         }
-				EXTI_ClearITPendingBit(EXTI_Line1);
     }
 }
 
