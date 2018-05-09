@@ -27,7 +27,7 @@ void TIM2_Init(void)
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
-	  TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+	TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
 }
 
 void TIM6_Init(void)
@@ -68,7 +68,7 @@ void Ultrasonic_Init(void)
     // interrupt config
     EXTI_ClearITPendingBit(EXTI_Line1 | EXTI_Line3);
     GPIO_EXTILineConfig(GPIO_PortSourceGPIOE, GPIO_PinSource1);
-	  GPIO_EXTILineConfig(GPIO_PortSourceGPIOE, GPIO_PinSource3);
+	GPIO_EXTILineConfig(GPIO_PortSourceGPIOE, GPIO_PinSource3);
     EXTI_InitStructure.EXTI_Line = EXTI_Line1 | EXTI_Line3;
     EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
     EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling;
@@ -102,11 +102,6 @@ void Ultrasonic_Trig(void)
     GPIO_WriteBit(GPIOE, GPIO_Pin_0, Bit_RESET);
     GPIO_WriteBit(GPIOE, GPIO_Pin_2, Bit_RESET);
     return;
-//	debug = 1 - debug;
-//	if (debug)
-//	GPIO_WriteBit(GPIOE, GPIO_Pin_2, Bit_SET);
-//	else
-//		GPIO_WriteBit(GPIOE, GPIO_Pin_2, Bit_RESET);
 }
 
 void EXTI1_IRQHandler(void)
@@ -132,7 +127,7 @@ void EXTI1_IRQHandler(void)
                     bounce_flag = 1;
                 }
                 ultra_record_flag_l = 0;
-								// printf(" %d ", TIM2->CNT);
+                // printf(" %d ", TIM2->CNT);
             }
         }
     }

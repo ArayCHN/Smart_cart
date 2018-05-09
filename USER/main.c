@@ -37,17 +37,17 @@ extern void SysTick_Handler()
     if (ultra_cnt == 0) Ultrasonic_Trig(); // ultrasonic update frequency = 1/2 * encoder vel update freq
     // printf("%d \n", v); // debug
     // printf("v3:%d    v4: %d\n", v3, v4); // debug
-	  if (obstacle_mode_flag == NONE_OBSTACLE)
-        {
-            printf("none!\n");
-        }
-        else
-        {
-            if (obstacle_mode_flag == RIGHT_OBSTACLE)
-                printf("right!\n");
-            else
-               printf("left!\n");
-        }
+    // if (obstacle_mode_flag == NONE_OBSTACLE) // debug - ultrasonic
+    //     {
+    //         printf("none!\n");
+    //     }
+    //     else
+    //     {
+    //         if (obstacle_mode_flag == RIGHT_OBSTACLE)
+    //             printf("right!\n");
+    //         else
+    //            printf("left!\n");
+    //     }
     return;
 }
 
@@ -74,7 +74,6 @@ int main()
 
     while (1)
     {
-			//printf("%d ", TIM2->CNT);
         if (obstacle_mode_flag == NONE_OBSTACLE)
         {
             //printf("none!\n");
