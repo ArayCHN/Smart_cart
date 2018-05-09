@@ -14,7 +14,8 @@ void TIM8_Cap_Init(void); // init for time interval method; need to change to TI
 // vars for time interval method
 int cnt_ch3 = 0, prev_cnt_ch3 = -1, cnt_ch4 = 0, prev_cnt_ch4 = -1, 
 	  delta_t3 = 0, delta_t4 = 0, cycles3 = 0, cycles4 = 0; // prev_cnt init -1 to prevent den==0
-u32 v3, v4, num, den;
+int v3, v4;
+u32  num, den;
 // cycles: the cycles of reloading in TIM. cuz there might have been multiple cycles between two interrupts!
 
 u8 obstacle_mode_flag = 0; // for ultrasonic, record if it is now in obstacle mode!
@@ -70,7 +71,7 @@ int main()
 
     TIM2_Init();
     TIM6_Init();
-    Ultrasonic_Init();
+    Ultrasonic_Init(); // GPIO: PE
 
     while (1)
     {
