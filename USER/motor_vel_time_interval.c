@@ -10,13 +10,14 @@ static int value_series[2][6], sum[2]; // value_series[0][i]: recent 5 values of
 
 int mean_filter(int new_value, int num)
 {
+	  int i, mean_value;
     sum[num] = sum[num] - value_series[num][0] + new_value;
     value_series[num][5] = new_value;
-    for (int i = 4; i >= 0; i --)
+    for (i = 4; i >= 0; i --)
     {
         value_series[num][i] = value_series[num][i + 1];
     }
-    int mean_value = sum[num] / 5;
+    mean_value = sum[num] / 5;
     return mean_value;
 }
 
@@ -35,7 +36,7 @@ extern void TIM8_CC_IRQHandler()
 
         num = (u32)(wheel_perimeter) * (u32)(SystemCoreClock / time_interval_prescaler) * 10;
         den = spokes_num * reduction_ratio * delta_t3;
-        if positive_direction v3 = num / den;
+        if (positive_direction) v3 = num / den;
         else v3 = - num / den;
         // if (v3 > 1000); // debug
         cycles3 = 0;
@@ -51,7 +52,7 @@ extern void TIM8_CC_IRQHandler()
 
         num = (u32)(wheel_perimeter) * (u32)(SystemCoreClock / time_interval_prescaler) * 10;
         den = spokes_num * reduction_ratio * delta_t4;
-        if positive_direction v4 = num / den;
+        if (positive_direction) v4 = num / den;
         else v4 = - num / den;
         prev_cnt_ch4 = cnt_ch4;
         cycles4 = 0;
@@ -134,7 +135,6 @@ void TIM8_Cap_Init() // capture mode
     TIM_Cmd(TIM8, ENABLE);
 
     // below: PE5, 6 init to determine rotation direction
-    GPIO_InitTypeDef GPIO_InitStructure;
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, ENABLE);
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
