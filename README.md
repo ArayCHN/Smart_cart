@@ -94,6 +94,27 @@ This will result in a rough distance threshold of 510mm.
 * the ultrasonic module must be connected to a voltage source of 5V, not 3.3V! Otherwise there might be weird problems such as a lot of wrong rising edges on the ECHO pin.
 * The time interval between 2 trigger should be longer than 60ms. Otherwise, the echos and triggers will overlap and it is impossible to distinguish which echo is paired with which trigger.
 
+## Motor PID Controller
+
+The motor controller is basically a PID controller that converges the motor velocity to target velocity. It is a small feedback loop within the large feedback loop introduced in the next section.
+
+I implemented a "increment PID" which, based on the idea to discretize the consecutive PID, utilizes the previous frame of input u (which is pwm `pulse` value for STM32 timer) and adds an increment to it.
+
+A consecutive PID is
+
+$$ u_t = k_p \epsilon_t + k_i \int_0^t \epsilon_t + k_d \dot{\epsilon_t} $$
+
+Discretize and subtract $u_t$ by $u_{t - 1}$, we obtain
+
+$$\Delta u_n = k_p(\epsilon_n - \epsilon_{n - 1}) + k_i\Delta t \epsilon_n + \frac{k_d}{\Delta t}(\epsilon_n - 2\epsilon_{n - 1} + \epsilon_{n - 2}) $$
+
+Note that we can take $k_i\Delta t$ and $\frac{k_d}{\Delta t}$ as two coefficients $k_i'$ and $k_d'$ since $\Delta t$ is a constant. The expression above is used to update pwm duty cycle.
+
+## General Controller
+
+The general controller goes like the block diagram shown below:
+!!!TO BE COMPLETED!!!
+
 ## List of files under  /USER
 ```
 retarget.c     for prinft() redirection

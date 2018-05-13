@@ -10,7 +10,7 @@ static int value_series[2][6], sum[2]; // value_series[0][i]: recent 5 values of
 
 int mean_filter(int new_value, int num)
 {
-	  int i, mean_value;
+	int i, mean_value;
     sum[num] = sum[num] - value_series[num][0] + new_value;
     value_series[num][5] = new_value;
     for (i = 4; i >= 0; i --)
