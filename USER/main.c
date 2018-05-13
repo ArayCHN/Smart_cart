@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include "macros.h"
 
-void TIMx_PWMInit(uint16_t prescaler, uint16_t period, uint16_t pulse);
+u16 prescaler = 72 - 1, motor_pwm_period = 999, pulse = 300; // 0~65535, for motor
+void TIMx_PWMInit(uint16_t prescaler, uint16_t pulse);
 void motor_pid_controller(int, int, int);
 
 void EncodeInit(void);
@@ -30,10 +31,10 @@ int omega, v_target;
 extern void SysTick_Handler()
 {
     // v = get_encoder_counts() * wheel_perimeter * 1000 / (spokes_num * reduction_ratio * sysTick_period * 4); // update velocity
-    // v in mm/s; all vals must be signed int32 so that the multiplication doesn't overflow & there are pos & neg
+    // v in mm/s; all vals must be signed int32 so that the multiplication doesn't overflow & there are pos & ne
     omega = get_encoder_counts(); // n circles' 50ms
-    int den = spokes_num * reduction_ratio * sysTick_period * 4; // divide encoder counter by 4
-    int num = omega * wheel_perimeter * 1000 * 10; // *10 cuz reduction ratio is 21.3 instead of 213
+    den = spokes_num * reduction_ratio * sysTick_period * 4; // divide encoder counter by 4
+    num = omega * wheel_perimeter * 1000 * 10; // *10 cuz reduction ratio is 21.3 instead of 213
     v = num / den;
 
     ultra_cnt = 1 - ultra_cnt;
@@ -64,12 +65,11 @@ void systickInit()
 
 void controller()
 {
-    v_target = 60;
+    v_target = 100;
 }
 
 int main()
 {
-    u16 prescaler = 72 - 1, motor_pwm_period = 49, pulse = 30; // 0~65535
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2); // priority group config, 2 bits preemption, 2 bits sub
     // priority group config must be before anything!
     TIMx_PWMInit(prescaler, pulse); // set timer for motor PWM

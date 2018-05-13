@@ -5,7 +5,7 @@
 static TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStructure; // only visible in this file
 static TIM_OCInitTypeDef TimOCInitStructure;
 extern u16 motor_pwm_period; // defined in main()
-static int err, err1, err2, delta_pulse;
+static int err, err1, err2, delta_pulse, pulse;
 
 void TIMx_PWMInit(uint16_t prescaler, uint16_t pulse)
 {
@@ -44,12 +44,12 @@ void TIMx_PWMInit(uint16_t prescaler, uint16_t pulse)
     TIM_CtrlPWMOutputs(TIM5, ENABLE);
     /* PWM config above */
     // config direction control output to L298N
+		RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4 
                                 | GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_7;
     GPIO_Init(GPIOD, &GPIO_InitStructure);
-
     return;
 }
 
@@ -60,25 +60,26 @@ void motor_pid_controller(int kp, int ki, int kd)
     // R = W * (vr1 + vr2 + vl1 + vl2) / (vr1 - vl1 + vr2 - vl2) / 2; // is prevision good?
     // err = R - R_target;
     extern int v_target, v;
-    err = v_target - v;
+    err = (v_target - v);
     delta_pulse = kp * (err - err1) + ki * err + kd * (err - 2 * err1 + err2);
     err2 = err1;
     err1 = err;
     pulse += delta_pulse;
     if (pulse < 0)
     {
-        GPIO_SetBits(GPIO_D, GPIO_Pin_0);
-        GPIO_ResetBits(GPIO_D, GPIO_Pin_0);
+        GPIO_SetBits(GPIOD, GPIO_Pin_0);
+        GPIO_ResetBits(GPIOD, GPIO_Pin_1);
         if (pulse < -motor_pwm_period) pulse = -motor_pwm_period;
         TimOCInitStructure.TIM_Pulse = -pulse;
     }
     else
     {
-        GPIO_SetBits(GPIO_D, GPIO_Pin_0);
-        GPIO_ResetBits(GPIO_D, GPIO_Pin_0);
+        GPIO_SetBits(GPIOD, GPIO_Pin_1);
+        GPIO_ResetBits(GPIOD, GPIO_Pin_0);
         if (pulse > motor_pwm_period) pulse = motor_pwm_period;
         TimOCInitStructure.TIM_Pulse = pulse;
     }
+		printf("pulse = %d v = %d  err = %d \n", pulse, v, err);
 
     TIM_OC1Init(TIM5, &TimOCInitStructure);
     TIM_OC2Init(TIM5, &TimOCInitStructure);
