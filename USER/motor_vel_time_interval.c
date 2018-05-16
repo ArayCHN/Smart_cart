@@ -2,8 +2,9 @@
 #include "stm32f10x.h"
 #include <stdio.h>
 #include "macros.h"
+#include "stdlib.h" // abs()
 
-extern int cnt_ch1, prev_cnt_ch1, cnt_ch4, prev_cnt_ch4, delta_t1, delta_t4, cycles1, cycles4, v_l2, v_r2;
+extern int cnt_ch1, prev_cnt_ch1, cnt_ch4, prev_cnt_ch4, delta_t1, delta_t4, cycles1, cycles4, vl2, vr2;
 extern u32 num, den;
 u8 positive_direction = 1;
 static int value_series[2][6], sum[2]; // value_series[0][i]: recent 5 values of v_l2; value_series[1][i]: recent 5 values of v_r2; 
@@ -12,18 +13,21 @@ static int value_series[2][6], sum[2]; // value_series[0][i]: recent 5 values of
 int mean_filter(int new_value, int num)
 {
 	int i, mean_value;
-    sum[num] = sum[num] - value_series[num][0] + new_value;
+	sum[num] = sum[num] + new_value - value_series[num][0];
     value_series[num][5] = new_value;
-    for (i = 4; i >= 0; i --)
+    for (i = 0; i <= 4; i ++)
     {
         value_series[num][i] = value_series[num][i + 1];
     }
-    mean_value = sum[num] / 5;
+    //mean_value = (value_series[num][0] + value_series[num][1] + value_series[num][2] + value_series[num][3] + value_series[num][4]) / 5;
+		mean_value = sum[num] / 5;
+		//printf("value_series:%d %d %d %d %d %d \n", value_series[num][0], value_series[num][1], value_series[num][2], value_series[num][3], value_series[num][4], value_series[num][5]);
     return mean_value;
 }
 
 extern void TIM1_CC_IRQHandler()
 {
+	  int tmp;
     if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_5) == SET)
         positive_direction = 1;
     else
@@ -33,28 +37,34 @@ extern void TIM1_CC_IRQHandler()
         TIM_ClearITPendingBit(TIM1, TIM_IT_CC1);
         cnt_ch1 = TIM_GetCapture1(TIM1);
         delta_t1 =  cycles1 * time_interval_reload + cnt_ch1 - prev_cnt_ch1;
-        delta_t1 = mean_filter(delta_t1, 0); // 0 for function mean_filter() to recognize as v_l2
+        // delta_t1 = mean_filter(delta_t1, 0); // 0 for function mean_filter() to recognize as v_l2
 
         num = (u32)(wheel_perimeter) * (u32)(SystemCoreClock / time_interval_prescaler) * 10;
         den = spokes_num * reduction_ratio * delta_t1;
-        if (positive_direction) v_l2 = num / den;
-        else v_l2 = - num / den;
-        // if (v_l2 > 1000); // debug
+			  tmp = vl2;
+        vl2 = num / den; // u32, only positive!
+        if (!positive_direction) vl2 = - vl2;
+        // if (vl2 > 1000); // debug
+			  // vl2 = mean_filter(vl2, 0);
+			  if (abs(vl2) > 1000) vl2 = tmp;
         cycles1 = 0;
         prev_cnt_ch1 = cnt_ch1;
-        // printf("v_l2:%d    v_r2: %d\n", v_l2, v_r2); // debug
+        // printf("vl2:%d    direction: %d\n", vl2, positive_direction); // debug
     }
     else if (TIM_GetITStatus(TIM1, TIM_IT_CC4) == SET)
     {
         TIM_ClearITPendingBit(TIM1, TIM_IT_CC4);
         cnt_ch4 = TIM_GetCapture4(TIM1);
         delta_t4 =  cycles4 * time_interval_reload + cnt_ch4 - prev_cnt_ch4;
-        delta_t4 = mean_filter(delta_t4, 1); // 1 for function mean_filter() to recognize as v_r2
+        // delta_t4 = mean_filter(delta_t4, 1); // 1 for function mean_filter() to recognize as v_r2
 
         num = (u32)(wheel_perimeter) * (u32)(SystemCoreClock / time_interval_prescaler) * 10;
         den = spokes_num * reduction_ratio * delta_t4;
-        if (positive_direction) v_r2 = num / den;
-        else v_r2 = - num / den;
+			  tmp = vr2;
+        vr2 = num / den;
+			// vr2 = mean_filter(vl2, 0);
+        if (!positive_direction) vr2 = - vr2;
+			  if (abs(vr2) > 1000) vr2 = tmp;
         prev_cnt_ch4 = cnt_ch4;
         cycles4 = 0;
     }
@@ -67,16 +77,16 @@ extern void TIM1_UP_IRQHandler() // runs every 0.083s. acceptable. update interr
     if (TIM_GetITStatus(TIM1, TIM_IT_Update) == SET)
     {
         cycles1 ++;
-        if (cycles1 > 5)
+        if (cycles1 > 2)
             {
-                v_l2 = 0;
-                if (cycles1 > 10) cycles1 = 10;
+                vl2 = 0;
+                if (cycles1 > 5) cycles1 = 5;
             }
         cycles4 ++;
-        if (cycles4 > 5)
+        if (cycles4 > 2)
             {
-                v_r2 = 0;
-                if (cycles4 > 10) cycles4 = 10;
+                vr2 = 0;
+                if (cycles4 > 5) cycles4 = 5;
             }
         TIM_ClearITPendingBit(TIM1, TIM_IT_Update);
     }

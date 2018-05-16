@@ -7,10 +7,13 @@ extern int last_cnt_r1, counts_r1, timer4cnt; // signed! cuz v can be negative
 
 void EncodeInit(void)
 {
-    // TIM4:
     GPIO_InitTypeDef GPIO_InitStructure; // PB6, PB7
     TIM_TimeBaseInitTypeDef  TIM4_TimeBaseStructure; // TIM4 CH1, 2 - PB6, 7 - Encoder_R1
     TIM_ICInitTypeDef TIM4_ICInitStructure;
+    TIM_TimeBaseInitTypeDef  TIM8_TimeBaseStructure; // TIM8 CH1, 2 - PC6, 7 - Encoder_R1
+    TIM_ICInitTypeDef TIM8_ICInitStructure;
+	  
+	  // TIM4:
 
     /* TIM4 Clock && GPIO enable */
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
@@ -45,12 +48,9 @@ void EncodeInit(void)
 
 
     // TIM8:
-    GPIO_InitTypeDef GPIO_InitStructure; // PC6, PC7
-    TIM_TimeBaseInitTypeDef  TIM8_TimeBaseStructure; // TIM8 CH1, 2 - PC6, 7 - Encoder_R1
-    TIM_ICInitTypeDef TIM8_ICInitStructure;
 
     /* TIM8 Clock && GPIO enable */
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM8, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
 
     /* Configure PB6, 7 */
@@ -84,7 +84,7 @@ void EncodeInit(void)
 int get_encoder_counts_l1() // from TIM8
 {
     timer8cnt = TIM8 -> CNT; // for debug
-    counts_l1 = timer4cnt - last_cnt_l1;
+    counts_l1 = timer8cnt - last_cnt_l1;
     if (counts_l1 < - encoder_counter_reload / 2) // counter overflowed
         counts_l1 += encoder_counter_reload;
         else

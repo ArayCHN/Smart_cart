@@ -1,9 +1,9 @@
 #include "stm32f10x.h"
 #include <stdio.h>
 #include "macros.h"
-#include "math.h" // write my own sin() eventually!!! to save time!!
+#include "stdlib.h" // abs() for integer. write my own abs() eventually!!! to save time!!
 
-static int err, err1, err2, R_inverse, delta_R_inverse, v_CoM;
+static int err, err1, err2, R_inverse, delta_R_inverse, v_CoM, R, R_abs;
 extern float beta;
 extern int ccd_line_length, delta_x; // obtain from zhukai!
 extern int vl1_target, vl2_target, vr1_target, vr2_target;
@@ -63,9 +63,9 @@ void controller_singleline(u8 kp, u8 ki, u8 kd)
     // solve for vr1, vr2, vl1, vl2 based on v_CoM and R
     // R = cart_width * (vr1 + vr2 + vl1 + vl2) / (vr1 - vl1 + vr2 - vl2) / 2; // is precision good? MAY REQUIRE CHANGE!
     // R > 0: turn right; R < 0: turn left
-    vr1 = v_CoM * (1 - cart_width / R / 2);
-    vr2 = v_CoM * (1 - cart_width / R / 2);
-    vl1 = v_CoM * (1 + cart_width / R / 2);
-    vl2 = v_CoM * (1 + cart_width / R / 2);
+    vr1_target = v_CoM * (1 - cart_width / R / 2);
+    vr2_target = v_CoM * (1 - cart_width / R / 2);
+    vl1_target = v_CoM * (1 + cart_width / R / 2);
+    vl2_target = v_CoM * (1 + cart_width / R / 2);
     return;
 }

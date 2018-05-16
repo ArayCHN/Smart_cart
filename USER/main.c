@@ -32,6 +32,10 @@ void Ultrasonic_Trig(void);
 // definitions for controller()!
 int R_target; // R_target is given by the general controller, global var
 void controller_doubleline(u8, u8, u8);
+void controller_singleline(u8, u8, u8);
+
+// definitions for linear ccd
+int delta_x;
 
 // below: systick, whose exception mechanism is shared among several devices
 static u8 ultra_cnt; // only visible in main.c
@@ -43,12 +47,12 @@ extern void SysTick_Handler()
     omega = get_encoder_counts_l1(); // n circles' 50ms
     den = spokes_num * reduction_ratio * sysTick_period * 4; // divide encoder counter by 4
     num = omega * wheel_perimeter * 1000 * 10; // *10 cuz reduction ratio is 21.3 instead of 213
-    v_l1 = num / den;
+    vl1 = num / den;
 
     omega = get_encoder_counts_r1(); // n circles' 50ms
     den = spokes_num * reduction_ratio * sysTick_period * 4; // divide encoder counter by 4
     num = omega * wheel_perimeter * 1000 * 10; // *10 cuz reduction ratio is 21.3 instead of 213
-    v_r1 = num / den;
+    vr1 = num / den;
 
     ultra_cnt = 1 - ultra_cnt;
     if (ultra_cnt == 0) Ultrasonic_Trig(); // ultrasonic update frequency = 1/2 * encoder vel update freq
@@ -66,6 +70,7 @@ extern void SysTick_Handler()
     //            printf("left!\n");
     //     }
     motor_pid_controller(1, 1, 1); // kp, ki, kd
+		printf("vl1 %d vl2 %d\n", vl1, vl2);
     return;
 }
 
@@ -103,8 +108,9 @@ int main()
             //else
             //   printf("left!\n");
             // obtain single line position!
+					  delta_x = 0;// OBTAIN FROM ZHUKAI!
             controller_singleline(1, 1, 1);
         }
     }
-    return 0;
+    // return 0; - never carried out
 }

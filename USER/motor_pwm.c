@@ -62,7 +62,7 @@ void motor_pid_controller(int kp, int ki, int kd) // pid config for motor l1, l2
 {
     // for motor l1:
     err_l1 = (vl1_target - vl1);
-    delta_pulse = kp * (err_l1 - err_l1_1) + ki * err_l1 + kd * (err_l1 - 2 * err_l1_1 + err_l1_2);
+    delta_pulse_l1 = kp * (err_l1 - err_l1_1) + ki * err_l1 + kd * (err_l1 - 2 * err_l1_1 + err_l1_2);
     err_l1_2 = err_l1_1;
     err_l1_1 = err_l1;
     pulse_l1 += delta_pulse_l1;
@@ -86,7 +86,7 @@ void motor_pid_controller(int kp, int ki, int kd) // pid config for motor l1, l2
 
     // for motor l2:
     err_l2 = (vl2_target - vl2);
-    delta_pulse = kp * (err_l2 - err_l2_1) + ki * err_l2 + kd * (err_l2 - 2 * err_l2_1 + err_l2_2);
+    delta_pulse_l2 = kp * (err_l2 - err_l2_1) + ki * err_l2 + kd * (err_l2 - 2 * err_l2_1 + err_l2_2);
     err_l2_2 = err_l2_1;
     err_l2_1 = err_l2;
     pulse_l2 += delta_pulse_l2;
@@ -109,7 +109,7 @@ void motor_pid_controller(int kp, int ki, int kd) // pid config for motor l1, l2
 
     // for motor r1:
     err_r1 = (vr1_target - vr1);
-    delta_pulse = kp * (err_r1 - err_r1_1) + ki * err_r1 + kd * (err_r1 - 2 * err_r1_1 + err_r1_2);
+    delta_pulse_r1 = kp * (err_r1 - err_r1_1) + ki * err_r1 + kd * (err_r1 - 2 * err_r1_1 + err_r1_2);
     err_r1_2 = err_r1_1;
     err_r1_1 = err_r1;
     pulse_r1 += delta_pulse_r1;
@@ -132,7 +132,7 @@ void motor_pid_controller(int kp, int ki, int kd) // pid config for motor l1, l2
 
     // for motor r2:
     err_r2 = (vr2_target - vr2);
-    delta_pulse = kp * (err_r2 - err_r2_1) + ki * err_r2 + kd * (err_r2 - 2 * err_r2_1 + err_r2_2);
+    delta_pulse_r2 = kp * (err_r2 - err_r2_1) + ki * err_r2 + kd * (err_r2 - 2 * err_r2_1 + err_r2_2);
     err_r2_2 = err_r2_1;
     err_r2_1 = err_r2;
     pulse_r2 += delta_pulse_r2;
