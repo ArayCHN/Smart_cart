@@ -19,4 +19,9 @@
 #define LEFT_OBSTACLE 1
 #define RIGHT_OBSTACLE 2
 
+// parameters for overall controller
+#define cart_width 200 // need more precision!
+#define ccd_distance 300 // sees the line 30 cm ahead, needs modification!
+#define lane_width 200 // needs modification!
+
 #endif

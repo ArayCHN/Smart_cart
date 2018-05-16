@@ -5,7 +5,12 @@
 static TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStructure; // only visible in this file
 static TIM_OCInitTypeDef TimOCInitStructure;
 extern u16 motor_pwm_period; // defined in main()
-static int err, err1, err2, delta_pulse, pulse;
+static int err_l1, err_l1_1, err_l1_2, delta_pulse_l1, pulse_l1,
+           err_l2, err_l2_1, err_l2_2, delta_pulse_l2, pulse_l2,
+           err_r1, err_r1_1, err_r1_2, delta_pulse_r1, pulse_r1,
+           err_r2, err_r2_1, err_r2_2, delta_pulse_r2, pulse_r2;
+
+extern int vl1_target, vl2_target, vr1_target, vr2_target, vl1, vl2, vr1, vr2;
 
 void TIMx_PWMInit(uint16_t prescaler, uint16_t pulse)
 {
@@ -44,7 +49,7 @@ void TIMx_PWMInit(uint16_t prescaler, uint16_t pulse)
     TIM_CtrlPWMOutputs(TIM5, ENABLE);
     /* PWM config above */
     // config direction control output to L298N
-		RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4 
@@ -53,45 +58,102 @@ void TIMx_PWMInit(uint16_t prescaler, uint16_t pulse)
     return;
 }
 
-void motor_pid_controller(int kp, int ki, int kd)
+void motor_pid_controller(int kp, int ki, int kd) // pid config for motor l1, l2, r1, r2
 {
-    // int R, delta_pulse;
-    // extern int R_target; // R_target is given by the general controller, global var
-    // R = W * (vr1 + vr2 + vl1 + vl2) / (vr1 - vl1 + vr2 - vl2) / 2; // is prevision good?
-    // err = R - R_target;
-    extern int v_target, v;
-    err = (v_target - v);
-    delta_pulse = kp * (err - err1) + ki * err + kd * (err - 2 * err1 + err2);
-    err2 = err1;
-    err1 = err;
-    pulse += delta_pulse;
-    if (pulse < 0)
+    // for motor l1:
+    err_l1 = (vl1_target - vl1);
+    delta_pulse = kp * (err_l1 - err_l1_1) + ki * err_l1 + kd * (err_l1 - 2 * err_l1_1 + err_l1_2);
+    err_l1_2 = err_l1_1;
+    err_l1_1 = err_l1;
+    pulse_l1 += delta_pulse_l1;
+    if (pulse_l1 < 0)
     {
         GPIO_SetBits(GPIOD, GPIO_Pin_0);
         GPIO_ResetBits(GPIOD, GPIO_Pin_1);
-        if (pulse < -motor_pwm_period) pulse = -motor_pwm_period;
-        TimOCInitStructure.TIM_Pulse = -pulse;
+        if (pulse_l1 < -motor_pwm_period) pulse_l1 = -motor_pwm_period;
+        TimOCInitStructure.TIM_Pulse = -pulse_l1;
     }
     else
     {
         GPIO_SetBits(GPIOD, GPIO_Pin_1);
         GPIO_ResetBits(GPIOD, GPIO_Pin_0);
-        if (pulse > motor_pwm_period) pulse = motor_pwm_period;
-        TimOCInitStructure.TIM_Pulse = pulse;
+        if (pulse_l1 > motor_pwm_period) pulse_l1 = motor_pwm_period;
+        TimOCInitStructure.TIM_Pulse = pulse_l1;
     }
-		printf("pulse = %d v = %d  err = %d \n", pulse, v, err);
-
+	// printf("pulse = %d v = %d  err_l1 = %d \n", pulse, v, err_l1);
     TIM_OC1Init(TIM5, &TimOCInitStructure);
-    TIM_OC2Init(TIM5, &TimOCInitStructure);
-    TIM_OC3Init(TIM5, &TimOCInitStructure);
-    TIM_OC4Init(TIM5, &TimOCInitStructure); // channel 1-4 config
     TIM_OC1PreloadConfig(TIM5, TIM_OCPreload_Enable);
+
+    // for motor l2:
+    err_l2 = (vl2_target - vl2);
+    delta_pulse = kp * (err_l2 - err_l2_1) + ki * err_l2 + kd * (err_l2 - 2 * err_l2_1 + err_l2_2);
+    err_l2_2 = err_l2_1;
+    err_l2_1 = err_l2;
+    pulse_l2 += delta_pulse_l2;
+    if (pulse_l2 < 0)
+    {
+        GPIO_SetBits(GPIOD, GPIO_Pin_2);
+        GPIO_ResetBits(GPIOD, GPIO_Pin_3);
+        if (pulse_l2 < -motor_pwm_period) pulse_l2 = -motor_pwm_period;
+        TimOCInitStructure.TIM_Pulse = -pulse_l2;
+    }
+    else
+    {
+        GPIO_SetBits(GPIOD, GPIO_Pin_2);
+        GPIO_ResetBits(GPIOD, GPIO_Pin_3);
+        if (pulse_l2 > motor_pwm_period) pulse_l2 = motor_pwm_period;
+        TimOCInitStructure.TIM_Pulse = pulse_l2;
+    }
+    TIM_OC2Init(TIM5, &TimOCInitStructure);
     TIM_OC2PreloadConfig(TIM5, TIM_OCPreload_Enable);
+
+    // for motor r1:
+    err_r1 = (vr1_target - vr1);
+    delta_pulse = kp * (err_r1 - err_r1_1) + ki * err_r1 + kd * (err_r1 - 2 * err_r1_1 + err_r1_2);
+    err_r1_2 = err_r1_1;
+    err_r1_1 = err_r1;
+    pulse_r1 += delta_pulse_r1;
+    if (pulse_r1 < 0)
+    {
+        GPIO_SetBits(GPIOD, GPIO_Pin_4);
+        GPIO_ResetBits(GPIOD, GPIO_Pin_5);
+        if (pulse_r1 < -motor_pwm_period) pulse_r1 = -motor_pwm_period;
+        TimOCInitStructure.TIM_Pulse = -pulse_r1;
+    }
+    else
+    {
+        GPIO_SetBits(GPIOD, GPIO_Pin_4);
+        GPIO_ResetBits(GPIOD, GPIO_Pin_5);
+        if (pulse_r1 > motor_pwm_period) pulse_r1 = motor_pwm_period;
+        TimOCInitStructure.TIM_Pulse = pulse_r1;
+    }
+    TIM_OC3Init(TIM5, &TimOCInitStructure);
     TIM_OC3PreloadConfig(TIM5, TIM_OCPreload_Enable);
-    TIM_OC4PreloadConfig(TIM5, TIM_OCPreload_Enable); // channel 1-4 config
+
+    // for motor r2:
+    err_r2 = (vr2_target - vr2);
+    delta_pulse = kp * (err_r2 - err_r2_1) + ki * err_r2 + kd * (err_r2 - 2 * err_r2_1 + err_r2_2);
+    err_r2_2 = err_r2_1;
+    err_r2_1 = err_r2;
+    pulse_r2 += delta_pulse_r2;
+    if (pulse_r2 < 0)
+    {
+        GPIO_SetBits(GPIOD, GPIO_Pin_6);
+        GPIO_ResetBits(GPIOD, GPIO_Pin_7);
+        if (pulse_r2 < -motor_pwm_period) pulse_r2 = -motor_pwm_period;
+        TimOCInitStructure.TIM_Pulse = -pulse_r2;
+    }
+    else
+    {
+        GPIO_SetBits(GPIOD, GPIO_Pin_6);
+        GPIO_ResetBits(GPIOD, GPIO_Pin_7);
+        if (pulse_r2 > motor_pwm_period) pulse_r2 = motor_pwm_period;
+        TimOCInitStructure.TIM_Pulse = pulse_r2;
+    }
+    TIM_OC4Init(TIM5, &TimOCInitStructure);
+    TIM_OC4PreloadConfig(TIM5, TIM_OCPreload_Enable);
+
     TIM_ARRPreloadConfig(TIM5, ENABLE);
-    TIM_Cmd(TIM5, ENABLE);
-    TIM_CtrlPWMOutputs(TIM5, ENABLE);
     TIM_Cmd(TIM5, ENABLE);
     TIM_CtrlPWMOutputs(TIM5, ENABLE);
     return;
