@@ -64,9 +64,11 @@ Due to the limited pins offered by the boarder vendor, I have to find another wa
 * Syntax: we use GPIO_Pin1 | GPIO_Pin2 to represent both pins are used. However, for `NVIC` and `TIM_Channel`, this is not the case. When we want to config multiple interruptions or multiple channels of one timer, we have to config each one separately. Refer to my code on this point.
 * `TIM8_UP_IRQHandler()` is carried out each time `TIM8->CNT` reloads. This function here specifically determines if a long time has passed and no interrupts happen (meaning, the cart velocity is very slow). In such case, it will assign $v = 0$ arbitrarily because otherwise, the velocity is not getting updated and will keep its previous value even when it is actually 0.
 
-**!!PROBLEM!!**
+**Problems**
 
-**unsolved: 一个奇怪的问题：在一些时候，当速度为0好久，然后启动一下，一瞬间速度会很小，紧接着接下来就会出现一个很大的速度。这个速度是错误的，但是为什么会得到这个结果？**
+* So when the velocity reverses direction, I found that the time interval method will return a very large value from time to time. I deduce that this is caused by motor joggling and cannot be solved with this method. So we will simply get rid of unreasonable values.
+* The mean value filter, under the condition that the cart is very slow, will result in a major delay in velocity calculation. Therefore, we opt not to use the mean value filter in the end after several tests.
+* When the velocity calculated by two methods differ too much, should use the encoder mode as the standard.
 
 ### ULTRASONIC MODULE TEST
 We use an ultrasonic module **HC-SR04** to check if there is an obstacle nearby. The ultrasonic module emits a wave when the pin TRIGGER is high for >10 us. The pin ECHO receives a high for a time t, meaning that the time sound travelled was t.
