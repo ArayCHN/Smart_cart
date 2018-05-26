@@ -30,3 +30,5 @@
 ..\obj\main.o: ..\STM32F10x_FWLib\inc\misc.h
 ..\obj\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 ..\obj\main.o: macros.h
+..\obj\main.o: ccd.h
+..\obj\main.o: controller.h

@@ -35,11 +35,17 @@ void Ultrasonic_Trig(void);
 
 // definitions for controller()!
 int R_target; // R_target is given by the general controller, global var
-void controller_doubleline(u8, u8, u8);
-void controller_singleline(u8, u8, u8);
+void controller(u8, u8, u8);
+void simple_controller_init();
+void simple_controller();
 
 // definitions for linear ccd
 int delta_x;
+void ccd_get_line();
+
+// for zhukai's simple controller
+STRU_BODYCONTROL_INFO BodyControlInfo; // used in simple_controller() in controller.c
+STRU_BODYCONTROL_TARGET BodyControlTarget;
 
 // below: systick, whose exception mechanism is shared among several devices
 static u8 ultra_cnt; // only visible in main.c
@@ -100,9 +106,7 @@ int main()
     Ultrasonic_Init(); // GPIO: PE
 
     Adc_Init(); // for ccd
-    STRU_BODYCONTROL_INFO BodyControlInfo; // used in simple_controller() in controller.c
-    simple_controller_init(BodyControlInfo);
-    STRU_BODYCONTROL_TARGET BodyControlTarget;
+    simple_controller_init();
 
     while (1)
     {

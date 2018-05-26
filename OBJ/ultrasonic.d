@@ -30,3 +30,4 @@
 ..\obj\ultrasonic.o: ..\STM32F10x_FWLib\inc\misc.h
 ..\obj\ultrasonic.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 ..\obj\ultrasonic.o: macros.h
+..\obj\ultrasonic.o: delay.h

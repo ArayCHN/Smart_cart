@@ -31,3 +31,4 @@
 ..\obj\controller.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 ..\obj\controller.o: macros.h
 ..\obj\controller.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+..\obj\controller.o: controller.h
