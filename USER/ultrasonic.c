@@ -1,6 +1,7 @@
 #include "stm32f10x.h"
 #include <stdio.h>
 #include "macros.h"
+#include "delay.h"
 
 u8 tim2_reload_flag = 0, tim6_reload_flag = 0, ultra_record_flag_l = 0, ultra_record_flag_r = 0, bounce_flag = 0;
 extern u8 obstacle_mode_flag;
@@ -21,13 +22,13 @@ void TIM2_Init(void)
     TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
     TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE); // interrupts when cnt > 3000
     TIM_Cmd(TIM2, DISABLE); // closed for now
-	
+
     NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;   
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
-	TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+    TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
 }
 
 void TIM6_Init(void)
@@ -82,13 +83,6 @@ void Ultrasonic_Init(void)
     NVIC_Init(&NVIC_InitStructure);
     NVIC_InitStructure.NVIC_IRQChannel = EXTI3_IRQn;
     NVIC_Init(&NVIC_InitStructure);
-}
-
-void delay_us(u16 delay_time)
-{   
-    u16 i, j;  
-    for (i = 0; i < delay_time; i++)  
-        for (j = 0; j < 9; j++);  
 }
 
 int debug = 0;

@@ -24,4 +24,10 @@
 #define ccd_distance 300 // sees the line 30 cm ahead, needs modification!
 #define lane_width 200 // needs modification!
 
+#define CCD_SI   PAout(7)   //SI
+#define CCD_CLK  PAout(6)   //CLK
+#define ccd_width 600 // 600 mm width for each ccd shot
+
+#define control_mode 0
+
 #endif

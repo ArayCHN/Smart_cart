@@ -2,6 +2,10 @@
 #include <stdio.h>
 #include "macros.h"
 
+#include "ccd.h"
+#include "controller.h"
+int left_line_dist, right_line_dist, mid_position_dist; // in ccd
+
 u16 prescaler = 72 - 1, motor_pwm_period = 999, pulse = 300; // 0~65535, for motor
 int vl1_target, vl2_target, vr1_target, vr2_target; // target vel
 void TIMx_PWMInit(uint16_t prescaler, uint16_t pulse);
@@ -42,6 +46,7 @@ static u8 ultra_cnt; // only visible in main.c
 int omega, v_target;
 extern void SysTick_Handler()
 {
+    Read_CCD(); // need to change the frequency this is carried out!
     // v = get_encoder_counts() * wheel_perimeter * 1000 / (spokes_num * reduction_ratio * sysTick_period * 4); // update velocity
     // v in mm/s; all vals must be signed int32 so that the multiplication doesn't overflow & there are pos & ne
     omega = get_encoder_counts_l1(); // n circles' 50ms
@@ -94,12 +99,20 @@ int main()
     TIM6_Init(); // for ultrasonic
     Ultrasonic_Init(); // GPIO: PE
 
+    Adc_Init(); // for ccd
+    STRU_BODYCONTROL_INFO BodyControlInfo; // used in simple_controller() in controller.c
+    simple_controller_init(BodyControlInfo);
+    STRU_BODYCONTROL_TARGET BodyControlTarget;
+
     while (1)
     {
+        ccd_get_line();
+        if (control_mode == 0) // wr
         if (obstacle_mode_flag == NONE_OBSTACLE)
         {
             //printf("none!\n");
-            controller_doubleline(1, 1, 1); // should be put on a time basis instead of always running!
+            delta_x = mid_position_dist;
+            controller(1, 1, 1); // should be put on a time basis instead of always running!
         }
         else
         {
@@ -108,9 +121,14 @@ int main()
             //else
             //   printf("left!\n");
             // obtain single line position!
-					  delta_x = 0;// OBTAIN FROM ZHUKAI!
-            controller_singleline(1, 1, 1);
+            if (obstacle_mode_flag == RIGHT_OBSTACLE) // ob on right, go to left
+                delta_x = left_line_dist;
+            else // ob on left, go to right
+                delta_x = right_line_dist;
+            controller(1, 1, 1);
         }
+        else // control_mode == 1, zk
+        simple_controller();
     }
     // return 0; - never carried out
 }
