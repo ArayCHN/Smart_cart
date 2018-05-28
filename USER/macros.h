@@ -4,7 +4,6 @@
 // these params are already fixed!
 #define spokes_num 11
 #define reduction_ratio 213 // reduction ratio = 21.3
-#define sysTick_period 50 // update v every 50ms
 #define wheel_perimeter 210 // in mm
 
 // parameter for vel calc with encoder mode
@@ -28,6 +27,13 @@
 #define CCD_CLK  PAout(6)   //CLK
 #define ccd_width 600 // 600 mm width for each ccd shot
 
-#define control_mode 0
+#define control_mode 0 // wr control
+
+// paramters for the frequencies at which each component is triggered
+#define sysTick_period 1 // enter sysTick interrupt every 1 ms
+#define ultra_period 107 // trigger ultrasonic module every 107ms 
+#define encoder_period 50 // update every 50 ms
+#define control_period 103
+#define ccd_exposure_period 10
 
 #endif

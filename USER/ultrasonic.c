@@ -102,7 +102,7 @@ void EXTI1_IRQHandler(void)
 {
     if (EXTI_GetITStatus(EXTI_Line1) != RESET)
     {
-			EXTI_ClearITPendingBit(EXTI_Line1);
+		EXTI_ClearITPendingBit(EXTI_Line1);
         if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_1) == 1) // rising edge  
         {
             TIM_SetCounter(TIM2, 0);

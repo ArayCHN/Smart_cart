@@ -129,7 +129,7 @@ u8 GetMid(u8 a, u8 b, u8 c)
 
 void SelectThreshold(void)
 {
-    for(pixel=0;pixel<127;pixel++)
+    for(pixel=0; pixel<127; pixel++)
     {
         CcdDifferential[pixel]=CcdFiltered[pixel+1]-CcdFiltered[pixel];
         if(CcdDifferentialMax<CcdDifferential[pixel])
