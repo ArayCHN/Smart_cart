@@ -47,7 +47,7 @@ int omega, v_target;
 static int systick_count, time_ccd_exposure, time_vel, time_control, time_ultra;
 extern void SysTick_Handler()
 {
-    systick_count ++;
+    systick_count ++; // every 1 ms
     systick_count %= 3600000; // an hour, long enough!
     if (systick_count % ccd_exposure_period == 0)
         time_ccd_exposure = 1; // time for ccd exposure
@@ -72,13 +72,6 @@ extern void SysTick_Handler()
     return;
 }
 
-void systickInit()
-{
-    SysTick_Config(SystemCoreClock / 1000 * sysTick_period); // SystemCoreClock == 72MHz
-    NVIC_SetPriority(SysTick_IRQn, 0); // set priority to 0, should be highest in system
-    return;
-}
-
 int main()
 {
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2); // priority group config, 2 bits preemption, 2 bits sub
@@ -95,6 +88,8 @@ int main()
     Adc_Init(); // for ccd
     simple_controller_init();
 
+    int last_obstacle_time_stamp = -2000;
+
     while (1)
     {
         if (time_ccd_exposure) Read_CCD(); // need to change the frequency this is carried out!
@@ -104,7 +99,7 @@ int main()
         }
         if (time_vel_control) // more frequent, small loop controls velocity
         {
-            printf("vl1 %d vl2 %d\n", vl1, vl2); // debug
+            // printf("vl1 %d vl2 %d\n", vl1, vl2); // debug
             // now we have vl1, vr1, vl2, vr2 (the former two come from encoder, latter two come from time interval mode)
             if (abs(vl1 - vl2) > abs(vl1) / 3) // if two vel deviate too much, go with encoder mode
                 vl2 = vl1;
@@ -121,7 +116,8 @@ int main()
         {
             ccd_get_line();
             if (control_mode == 0) // wr control
-                if (obstacle_mode_flag == NONE_OBSTACLE)
+                if (obstacle_mode_flag == NONE_OBSTACLE && systick_count - last_obstacle_time_stamp > 2000)
+                // no obstacle detected now by ultrasonic module and, last obstacle was at least 2 secs ago, now safe!
                 {
                     //printf("none!\n");
                     delta_x = mid_position_dist;
@@ -129,6 +125,7 @@ int main()
                 }
                 else
                 {
+                    last_obstacle_time_stamp = systick_count; // record there has been an obstacle at this time stamp
                     if (obstacle_mode_flag == RIGHT_OBSTACLE) // ob on right, go to left
                         delta_x = left_line_dist;
                     else // ob on left, go to right
