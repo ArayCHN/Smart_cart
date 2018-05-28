@@ -10,7 +10,7 @@ u8 positive_direction = 1;
 static int value_series[2][6], sum[2]; // value_series[0][i]: recent 5 values of v_l2; value_series[1][i]: recent 5 values of v_r2; 
 // sum[0]: sum of recent 5 values of v_l2
 
-int mean_filter(int new_value, int num)
+int mean_filter(int new_value, int num) // mean value filter, result in time lag, no longer in use
 {
 	int i, mean_value;
 	sum[num] = sum[num] + new_value - value_series[num][0];
@@ -36,7 +36,7 @@ extern void TIM1_CC_IRQHandler()
     {
         TIM_ClearITPendingBit(TIM1, TIM_IT_CC1);
         cnt_ch1 = TIM_GetCapture1(TIM1);
-        delta_t1 =  cycles1 * time_interval_reload + cnt_ch1 - prev_cnt_ch1;
+        delta_t1 = cycles1 * time_interval_reload + cnt_ch1 - prev_cnt_ch1;
         // delta_t1 = mean_filter(delta_t1, 0); // 0 for function mean_filter() to recognize as v_l2
 
         num = (u32)(wheel_perimeter) * (u32)(SystemCoreClock / time_interval_prescaler) * 10;

@@ -106,3 +106,20 @@ int get_encoder_counts_r1() // from TIM4
     last_cnt_r1 = TIM4 -> CNT;
     return counts_r1;
 }
+
+void encoder_vel_calc()
+{
+    extern int vl1, vr1;
+    int omega, num, den;
+    // v = get_encoder_counts() * wheel_perimeter * 1000 / (spokes_num * reduction_ratio * sysTick_period * 4); // update velocity
+    // v in mm/s; all vals must be signed int32 so that the multiplication doesn't overflow & there are pos & ne
+    omega = get_encoder_counts_l1(); // n counts per 50ms
+    den = spokes_num * reduction_ratio * encoder_period * 4; // divide encoder counter by 4
+    num = omega * wheel_perimeter * 1000 * 10; // *10 cuz reduction ratio is 21.3 instead of 213
+    vl1 = num / den;
+
+    omega = get_encoder_counts_r1(); // n circles' 50ms
+    den = spokes_num * reduction_ratio * encoder_period * 4; // divide encoder counter by 4
+    num = omega * wheel_perimeter * 1000 * 10; // *10 cuz reduction ratio is 21.3 instead of 213
+    vr1 = num / den;
+}

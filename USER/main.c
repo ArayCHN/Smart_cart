@@ -54,9 +54,9 @@ extern void SysTick_Handler()
     else
         time_ccd_exposure = 0;
     if (systick_count % encoder_period == 0)
-        time_vel = 1; // time to calculate velocity!
+        time_vel_encoder_update = 1; // time to calculate velocity!
     else
-        time_vel = 0;
+        time_vel_encoder_update = 0;
     if (systick_count % ultra_period == 0)
         time_ultra = 1;
     else
@@ -65,7 +65,10 @@ extern void SysTick_Handler()
         time_control = 1;
     else
         time_control = 0;
-
+    if (systick % vel_control_period == 0)
+        time_vel_control = 1;
+    else
+        time_vel_control = 0;
     return;
 }
 
@@ -95,44 +98,45 @@ int main()
     while (1)
     {
         if (time_ccd_load) Read_CCD(); // need to change the frequency this is carried out!
-        if (time_vel) // time to update velocity!
+        if (time_vel_encoder_update) // time to update velocity under encoder mode! precision: 5mm/s
         {
-            // v = get_encoder_counts() * wheel_perimeter * 1000 / (spokes_num * reduction_ratio * sysTick_period * 4); // update velocity
-            // v in mm/s; all vals must be signed int32 so that the multiplication doesn't overflow & there are pos & ne
-            omega = get_encoder_counts_l1(); // n circles' per 50ms
-            den = spokes_num * reduction_ratio * encoder_period * 4; // divide encoder counter by 4
-            num = omega * wheel_perimeter * 1000 * 10; // *10 cuz reduction ratio is 21.3 instead of 213
-            vl1 = num / den;
-
-            omega = get_encoder_counts_r1(); // n circles' 50ms
-            den = spokes_num * reduction_ratio * encoder_period * 4; // divide encoder counter by 4
-            num = omega * wheel_perimeter * 1000 * 10; // *10 cuz reduction ratio is 21.3 instead of 213
-            vr1 = num / den;
-
+            encoder_vel_calc(); // update vl1, vl2
+        }
+        if (time_vel_control) // more frequent, small loop controls velocity
+        {
+            printf("vl1 %d vl2 %d\n", vl1, vl2); // debug
+            // now we have vl1, vr1, vl2, vr2 (the former two come from encoder, latter two come from time interval mode)
+            if (abs(vl1 - vl2) > abs(vl1) / 3) // if two vel deviate too much, go with encoder mode
+                vl2 = vl1;
+            else
+                vl1 = (vl1 + vl2) / 2;
+            if (abs(vr1 - vr2) > abs(vr1) / 3) // if two vel deviate too much, go with encoder mode
+                vr2 = vr1;
+            else
+                vr1 = (vr1 + vr2) / 2;
             motor_pid_controller(1, 1, 1); // kp, ki, kd
-            // printf("vl1 %d vl2 %d\n", vl1, vl2); // debug
         }
         if (time_ultra) Ultrasonic_Trig();
         if (time_control)
         {
             ccd_get_line();
             if (control_mode == 0) // wr control
-            if (obstacle_mode_flag == NONE_OBSTACLE)
-            {
-                //printf("none!\n");
-                delta_x = mid_position_dist;
-                controller(1, 1, 1); // should be put on a time basis instead of always running!
-            }
-            else
-            {
-                if (obstacle_mode_flag == RIGHT_OBSTACLE) // ob on right, go to left
-                    delta_x = left_line_dist;
-                else // ob on left, go to right
-                    delta_x = right_line_dist;
-                controller(1, 1, 1);
-            }
+                if (obstacle_mode_flag == NONE_OBSTACLE)
+                {
+                    //printf("none!\n");
+                    delta_x = mid_position_dist;
+                    controller(1, 1, 1); // should be put on a time basis instead of always running!
+                }
+                else
+                {
+                    if (obstacle_mode_flag == RIGHT_OBSTACLE) // ob on right, go to left
+                        delta_x = left_line_dist;
+                    else // ob on left, go to right
+                        delta_x = right_line_dist;
+                    controller(1, 1, 1);
+                }
             else // control_mode == 1, zk control
-            simple_controller();
+                simple_controller();
         }
     }
     // return 0; - never carried out
