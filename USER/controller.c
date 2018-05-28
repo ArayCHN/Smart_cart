@@ -8,6 +8,10 @@ static int err, err1, err2, R_inverse, delta_R_inverse, v_CoM, R, R_abs;
 extern float beta;
 extern int ccd_line_length, delta_x;
 extern int vl1_target, vl2_target, vr1_target, vr2_target;
+extern int obstacle_mode_flag;
+
+extern STRU_BODYCONTROL_INFO BodyControlInfo; // defined in main.c, used in simple_controller() in controller.c
+extern STRU_BODYCONTROL_TARGET BodyControlTarget;
 
 void controller(u8 kp, u8 ki, u8 kd) // these params require tuning!
 {
@@ -40,7 +44,7 @@ void controller(u8 kp, u8 ki, u8 kd) // these params require tuning!
     return;
 }
 
-void simple_controller_init(STRU_BODYCONTROL_INFO BodyControlInfo) // these val require tuning!
+void simple_controller_init(void) // these val require tuning!
 {
     BodyControlInfo.BodyAngularPIDKp = 1;
     BodyControlInfo.BodyLinearPIDKp = 1;
@@ -50,14 +54,16 @@ void simple_controller_init(STRU_BODYCONTROL_INFO BodyControlInfo) // these val 
 
 void simple_controller(void) // from zhukai's code
 {
+	  int TargetPosition;
+	  int8_t Bias; u8 BiasAbs;
+	  extern int MiddlePosition, RightLine, LeftLine; // defined in ccd.c
     if (obstacle_mode_flag == NONE_OBSTACLE)
         TargetPosition = MiddlePosition;
     else if (obstacle_mode_flag == LEFT_OBSTACLE)
         TargetPosition = RightLine;
     else
         TargetPosition = LeftLine;
-    int8_t Bias=TargetPosition-64;
-    u8 BiasAbs;
+    Bias=TargetPosition-64;
     if (Bias>0)  {BiasAbs = Bias;}
     else         {BiasAbs = -Bias;}
     BodyControlTarget.BodyTargetAngularVelocity = BodyControlInfo.BodyAngularPIDKp * Bias; 

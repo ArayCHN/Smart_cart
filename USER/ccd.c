@@ -17,7 +17,7 @@ int RightLine=88;
 u8 RightLineState=0;
 int MiddlePosition=64;
 
-int left_line_dist, right_line_dist, mid_position_dist;
+extern int left_line_dist, right_line_dist, mid_position_dist;
 
 const u8 CcdCompensationValue[128]={0};
 u8 CcdFiltered[128];
@@ -41,10 +41,10 @@ void  Adc_Init(void)
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
+	GPIO_Init(GPIOA, &GPIO_InitStructure); // PA6, ccd clock
 	
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
+	GPIO_Init(GPIOA, &GPIO_InitStructure); // PA7, ccd SI
 
 	ADC_DeInit(ADC1);
 
@@ -77,24 +77,24 @@ u16 Get_Adc(u8 ch) // ch: channel
 void Read_CCD(void) // evrey 10-15 ms
 {
 	u8 i=0,pixel=0;
-	CCD_SI=0; 
+	GPIO_ResetBits(GPIOA, GPIO_Pin_7); // CCD_SI=0;PA7
 	delay_us(1);
 	
-	CCD_SI=1;
+	GPIO_SetBits(GPIOA, GPIO_Pin_7); // CCD_SI=1;
 	delay_us(1);
-	CCD_CLK=0;
+	GPIO_ResetBits(GPIOA, GPIO_Pin_6); // CCD_CLK=0;6
 	delay_us(1);
 
-	CCD_CLK=1;
-	CCD_SI=0;
+	GPIO_SetBits(GPIOA, GPIO_Pin_6); // CCD_CLK=1;
+	GPIO_ResetBits(GPIOA, GPIO_Pin_7); // CCD_SI=0;
 	delay_us(1);
 	for(i=0;i<128;i++)
 	{ 
-		CCD_CLK=0; 
+		GPIO_ResetBits(GPIOA, GPIO_Pin_6); // CCD_CLK=0; 
 		delay_us(1);
 		CCD[pixel]=Get_Adc(5)>>4;
 		++pixel;
-		CCD_CLK=1;
+		GPIO_SetBits(GPIOA, GPIO_Pin_6); // CCD_CLK=1;
 		delay_us(1); 
     }
 }
