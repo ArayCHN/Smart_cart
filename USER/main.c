@@ -94,7 +94,7 @@ int main()
 
     while (1)
     {
-        if (time_ccd_load) Read_CCD(); // need to change the frequency this is carried out!
+        if (time_ccd_exposure) Read_CCD(); // need to change the frequency this is carried out!
         if (time_vel) // time to update velocity!
         {
             // v = get_encoder_counts() * wheel_perimeter * 1000 / (spokes_num * reduction_ratio * sysTick_period * 4); // update velocity

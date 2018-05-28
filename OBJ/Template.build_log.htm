@@ -22,20 +22,30 @@ Dialog DLL:      TARMSTM.DLL V1.64.0.0
  
 <h2>Project:</h2>
 C:\Users\Rui\Tsinghua\classes\mechatronics_system_lab\stm32project\USER\Template.uvprojx
-Project File Date:  05/16/2018
+Project File Date:  05/26/2018
 
 <h2>Output:</h2>
 Build target 'Template'
-compiling delay.c...
-delay.h(7): warning:  #1-D: last line of file ends without a newline
+compiling main.c...
+controller.h(15): warning:  #1-D: last line of file ends without a newline
+  }STRU_BODYCONTROL_TARGET;
+motor_pwm.h(7): warning:  #1-D: last line of file ends without a newline
   #endif
-delay.c(10): warning:  #1-D: last line of file ends without a newline
-  }
-delay.c: 2 warnings, 0 errors
+motor_vel_encoder_mode.h(8): warning:  #1-D: last line of file ends without a newline
+  #endif
+ultrasonic.h(9): warning:  #1-D: last line of file ends without a newline
+  #endif
+main.c(34): warning:  #1295-D: Deprecated declaration simple_controller_init - give arg types
+  void simple_controller_init();
+main.c(35): warning:  #1295-D: Deprecated declaration simple_controller - give arg types
+  void simple_controller();
+main.c(39): warning:  #1295-D: Deprecated declaration ccd_get_line - give arg types
+  void ccd_get_line();
+main.c: 7 warnings, 0 errors
 linking...
-Program Size: Code=10176 RO-data=464 RW-data=340 ZI-data=1844  
+Program Size: Code=9868 RO-data=464 RW-data=348 ZI-data=1844  
 FromELF: creating hex file...
-"..\OBJ\Template.axf" - 0 Error(s), 2 Warning(s).
+"..\OBJ\Template.axf" - 0 Error(s), 7 Warning(s).
 
 <h2>Collection of Component include folders:</h2>
   C:\Users\Rui\Tsinghua\classes\mechatronics_system_lab\stm32project\USER\RTE
