@@ -97,8 +97,8 @@ int main()
 
     while (1)
     {
-        if (time_ccd_load) Read_CCD(); // need to change the frequency this is carried out!
-        if (time_vel_encoder_update) // time to update velocity under encoder mode! precision: 5mm/s
+        if (time_ccd_exposure) Read_CCD(); // need to change the frequency this is carried out!
+        if (time_vel) // time to update velocity!
         {
             encoder_vel_calc(); // update vl1, vl2
         }
