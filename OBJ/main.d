@@ -32,6 +32,7 @@
 ..\obj\main.o: macros.h
 ..\obj\main.o: ccd.h
 ..\obj\main.o: controller.h
+..\obj\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
 ..\obj\main.o: motor_pwm.h
 ..\obj\main.o: motor_vel_encoder_mode.h
 ..\obj\main.o: ultrasonic.h

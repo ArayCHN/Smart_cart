@@ -4,6 +4,7 @@
 
 #include "ccd.h"
 #include "controller.h"
+#include <stdlib.h> // abs()
 
 int left_line_dist, right_line_dist, mid_position_dist; // in ccd
 
@@ -25,7 +26,8 @@ int cnt_ch1 = 0, prev_cnt_ch1 = -1, cnt_ch4 = 0, prev_cnt_ch4 = -1,
 int num, den;
 // cycles: the cycles of reloading in TIM. cuz there might have been multiple cycles between two interrupts!
 
-u8 obstacle_mode_flag = 0; // for ultrasonic, record if it is now in obstacle mode!
+u8 obstacle_mode_flag = 0, last_obstacle_mode_flag = 0; // for ultrasonic, record if it is now in obstacle mode!
+int last_obstacle_time_stamp = -2000;
 #include "ultrasonic.h"
 
 // definitions for controller()!
@@ -44,7 +46,7 @@ STRU_BODYCONTROL_TARGET BodyControlTarget;
 
 // below: systick, whose exception mechanism is shared among several devices
 int omega, v_target;
-static int systick_count, time_ccd_exposure, time_vel, time_control, time_ultra;
+static int systick_count, time_ccd_exposure, time_control, time_ultra, time_vel_encoder_update, time_vel_control;
 extern void SysTick_Handler()
 {
     systick_count ++; // every 1 ms
@@ -65,10 +67,17 @@ extern void SysTick_Handler()
         time_control = 1;
     else
         time_control = 0;
-    if (systick % vel_control_period == 0)
+    if (systick_count % vel_control_period == 0)
         time_vel_control = 1;
     else
         time_vel_control = 0;
+    return;
+}
+
+void systickInit()
+{
+    SysTick_Config(SystemCoreClock / 1000 * sysTick_period); // SystemCoreClock == 72MHz
+    NVIC_SetPriority(SysTick_IRQn, 0); // set priority to 0, should be highest in system
     return;
 }
 
@@ -88,12 +97,10 @@ int main()
     Adc_Init(); // for ccd
     simple_controller_init();
 
-    int last_obstacle_time_stamp = -2000;
-
     while (1)
     {
         if (time_ccd_exposure) Read_CCD(); // need to change the frequency this is carried out!
-        if (time_vel) // time to update velocity!
+        if (time_vel_encoder_update) // time to update velocity!
         {
             encoder_vel_calc(); // update vl1, vl2
         }
@@ -126,10 +133,16 @@ int main()
                 else
                 {
                     last_obstacle_time_stamp = systick_count; // record there has been an obstacle at this time stamp
-                    if (obstacle_mode_flag == RIGHT_OBSTACLE) // ob on right, go to left
+                    if (obstacle_mode_flag == RIGHT_OBSTACLE || (obstacle_mode_flag == NONE_OBSTACLE && last_obstacle_mode_flag == RIGHT_OBSTACLE)) // ob on right, go to left
+										{
                         delta_x = left_line_dist;
+											  last_obstacle_mode_flag = RIGHT_OBSTACLE;
+										}
                     else // ob on left, go to right
+										{
                         delta_x = right_line_dist;
+											  last_obstacle_mode_flag = LEFT_OBSTACLE;
+										}
                     controller(1, 1, 1);
                 }
             else // control_mode == 1, zk control

@@ -4,5 +4,6 @@
 void EncodeInit(void);
 int get_encoder_counts_l1(void);
 int get_encoder_counts_r1(void);
+void encoder_vel_calc();
 
 #endif
