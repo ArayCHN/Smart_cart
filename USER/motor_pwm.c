@@ -107,7 +107,7 @@ void motor_pid_controller(int kp, int ki, int kd) // pid config for motor l1, l2
     }
     TIM_OC2Init(TIM5, &TimOCInitStructure);
     TIM_OC2PreloadConfig(TIM5, TIM_OCPreload_Enable);
-		printf("pulse = %d vl2 = %d  err_l2 = %d \n", pulse_l2, vl2, err_l2);
+		//printf("pulse = %d vl2 = %d  err_l2 = %d \n", pulse_l2, vl2, err_l2);
 
     // for motor r1:
     err_r1 = (vr1_target - vr1);
@@ -154,7 +154,7 @@ void motor_pid_controller(int kp, int ki, int kd) // pid config for motor l1, l2
     }
     TIM_OC4Init(TIM5, &TimOCInitStructure);
     TIM_OC4PreloadConfig(TIM5, TIM_OCPreload_Enable);
-		printf("pulse = %d vr2 = %d  err_r2 = %d \n", pulse_r2, vr2, err_r2);
+		//printf("pulse = %d vr2 = %d  err_r2 = %d \n", pulse_r2, vr2, err_r2);
 
     TIM_ARRPreloadConfig(TIM5, ENABLE);
     TIM_Cmd(TIM5, ENABLE);

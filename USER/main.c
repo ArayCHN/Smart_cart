@@ -27,7 +27,7 @@ int num, den;
 // cycles: the cycles of reloading in TIM. cuz there might have been multiple cycles between two interrupts!
 
 u8 obstacle_mode_flag = 0, last_obstacle_mode_flag = 0; // for ultrasonic, record if it is now in obstacle mode!
-int last_obstacle_time_stamp = -2000;
+int last_obstacle_time_stamp = -obstacle_time_threshold;
 #include "ultrasonic.h"
 
 // definitions for controller()!
@@ -67,37 +67,45 @@ extern void SysTick_Handler()
         time_ultra = 0;
     if (systick_count % control_period == 0)
 		{
-						vl1_target = 300;
-					  vl2_target = 300;
-					  vr1_target = 300;
-					  vr2_target = 300;
+			      vl1_target = 0;
+					  vl2_target = 0;
+					  vr1_target = 0;
+					  vr2_target = 0;
             ccd_get_line();
-            /*if (control_mode == 0) // wr control
-                if (obstacle_mode_flag == NONE_OBSTACLE && systick_count - last_obstacle_time_stamp > 2000)
-                // no obstacle detected now by ultrasonic module and, last obstacle was at least 2 secs ago, now safe!
+            if (control_mode == 0) // wr control
+                if (obstacle_mode_flag == NONE_OBSTACLE && systick_count - last_obstacle_time_stamp > obstacle_time_threshold)
+                // no obstacle detected now by ultrasonic module and, last obstacle was at least 3 secs ago, now safe!
                 {
-                    //printf("none!\n");
+                    printf("none!\n");
                     delta_x = mid_position_dist;
-                    controller(1, 1, 1); // should be put on a time basis instead of always running!
+                    //controller(1, 1, 1);
                 }
                 else
                 {
-                    last_obstacle_time_stamp = systick_count; // record there has been an obstacle at this time stamp
                     if (obstacle_mode_flag == RIGHT_OBSTACLE || (obstacle_mode_flag == NONE_OBSTACLE && last_obstacle_mode_flag == RIGHT_OBSTACLE)) // ob on right, go to left
 										{
+											  printf("right, %d, %d\n", obstacle_mode_flag, last_obstacle_time_stamp);
                         delta_x = left_line_dist;
-											  last_obstacle_mode_flag = RIGHT_OBSTACLE;
+											  if (obstacle_mode_flag == RIGHT_OBSTACLE)
+												{
+													last_obstacle_mode_flag = RIGHT_OBSTACLE;
+													last_obstacle_time_stamp = systick_count;
+												}
 										}
                     else // ob on left, go to right
 										{
+											  printf("left, %d, %d\n", obstacle_mode_flag, last_obstacle_time_stamp);
                         delta_x = right_line_dist;
-											  last_obstacle_mode_flag = LEFT_OBSTACLE;
+											  if (obstacle_mode_flag == LEFT_OBSTACLE)
+												{
+													last_obstacle_mode_flag = LEFT_OBSTACLE;
+													last_obstacle_time_stamp = systick_count;
+												}
 										}
-                    controller(1, 1, 1);
+                    //controller(1, 1, 1);
                 }
             else // control_mode == 1, zk control
                 simple_controller();
-								*/
 		}
     if (systick_count % vel_control_period == 0)
 		{
@@ -126,7 +134,7 @@ void systickInit()
 
 int main()
 {
-    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2); // priority group config, 2 bits preemption, 2 bits sub
+   NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2); // priority group config, 2 bits preemption, 2 bits sub
     // priority group config must be before anything!
     TIMx_PWMInit(prescaler, pulse); // set timer for motor PWM
     EncodeInit(); // use encoder mode for motor

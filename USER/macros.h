@@ -13,6 +13,7 @@
 #define time_interval_reload 60000
 #define time_interval_prescaler 100
 
+#define obstacle_time_threshold 3000 // 3s
 // which side the obstacle is on
 #define NONE_OBSTACLE 0
 #define LEFT_OBSTACLE 1
@@ -26,6 +27,9 @@
 #define ccd_width 600 // 600 mm width for each ccd shot
 
 #define control_mode 0 // wr control
+#define max_vel 500
+#define mid_vel 200
+#define min_vel 100
 
 // paramters for the frequencies at which each component is triggered
 #define sysTick_period 1 // enter sysTick interrupt every 1 ms

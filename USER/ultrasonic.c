@@ -34,6 +34,7 @@ void TIM2_Init(void)
 void TIM6_Init(void)
 {  
     TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
+	NVIC_InitTypeDef NVIC_InitStructure;
     /* TIM6 clock enable */
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM6, ENABLE);  
     /* Time base configuration */
@@ -46,6 +47,13 @@ void TIM6_Init(void)
     TIM_TimeBaseInit(TIM6, &TIM_TimeBaseStructure);
     TIM_ITConfig(TIM6, TIM_IT_Update, ENABLE); // interrupts when cnt > 3000
     TIM_Cmd(TIM6, DISABLE); // closed for now
+	
+	  NVIC_InitStructure.NVIC_IRQChannel = TIM6_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;   
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
+    TIM_ClearITPendingBit(TIM6, TIM_IT_Update);
 }
 
 void Ultrasonic_Init(void)
@@ -85,7 +93,6 @@ void Ultrasonic_Init(void)
     NVIC_Init(&NVIC_InitStructure);
 }
 
-int debug = 0;
 void Ultrasonic_Trig(void)
 {
     if (!bounce_flag) obstacle_mode_flag = NONE_OBSTACLE;
@@ -150,6 +157,7 @@ void EXTI3_IRQHandler(void)
                     obstacle_mode_flag = RIGHT_OBSTACLE;
                 }
                 ultra_record_flag_r = 0;
+								printf(" %d ", TIM6->CNT);
             }
         }
     }
@@ -165,5 +173,6 @@ void TIM2_IRQHandler(void)
 void TIM6_IRQHandler(void)
 {
     tim6_reload_flag = 1;
+	  TIM_ClearITPendingBit(TIM6, TIM_IT_Update);
     return;
 }

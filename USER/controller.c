@@ -25,15 +25,15 @@ void controller(u8 kp, u8 ki, u8 kd) // these params require tuning!
     err2 = err1;
     err1 = err;
     R_inverse += delta_R_inverse;
-    R = 3000 / R_inverse;
+    R = 10000 / R_inverse;
     R_abs = abs(R);
     if (R_abs >= 1000)
-        v_CoM = 300; // need to adjust!! define in macro, max_vel, mid_vel, min_vel
+        v_CoM = max_vel; // need to adjust!! define in macro, max_vel, mid_vel, min_vel
     else
-        if (R_abs >= 50)
-            v_CoM = 100;
+        if (R_abs >= 200)
+            v_CoM = mid_vel;
         else
-            v_CoM = 50;
+            v_CoM = min_vel;
     // solve for vr1, vr2, vl1, vl2 based on v_CoM and R
     // R = cart_width * (vr1 + vr2 + vl1 + vl2) / (vr1 - vl1 + vr2 - vl2) / 2; // is precision good? MAY REQUIRE CHANGE!
     // R > 0: turn right; R < 0: turn left
