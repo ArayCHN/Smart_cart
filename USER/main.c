@@ -50,7 +50,6 @@ static int systick_count, time_ccd_exposure, time_ultra;
 extern void SysTick_Handler()
 {
     systick_count ++; // every 1 ms
-	  //printf("%d\n", systick_count);
     systick_count %= 3600000; // an hour, long enough!
     if (systick_count % ccd_exposure_period == 0)
         time_ccd_exposure = 1; // time for ccd exposure
@@ -67,24 +66,24 @@ extern void SysTick_Handler()
         time_ultra = 0;
     if (systick_count % control_period == 0)
 		{
-			      vl1_target = 0;
+			      /*vl1_target = 0; // debug
 					  vl2_target = 0;
 					  vr1_target = 0;
-					  vr2_target = 0;
+					  vr2_target = 0;*/
             ccd_get_line();
             if (control_mode == 0) // wr control
+						{
                 if (obstacle_mode_flag == NONE_OBSTACLE && systick_count - last_obstacle_time_stamp > obstacle_time_threshold)
                 // no obstacle detected now by ultrasonic module and, last obstacle was at least 3 secs ago, now safe!
                 {
-                    printf("none!\n");
+                    //printf("none!\n");
                     delta_x = mid_position_dist;
-                    //controller(1, 1, 1);
                 }
                 else
                 {
                     if (obstacle_mode_flag == RIGHT_OBSTACLE || (obstacle_mode_flag == NONE_OBSTACLE && last_obstacle_mode_flag == RIGHT_OBSTACLE)) // ob on right, go to left
 										{
-											  printf("right, %d, %d\n", obstacle_mode_flag, last_obstacle_time_stamp);
+											  //printf("right, %d, %d\n", obstacle_mode_flag, last_obstacle_time_stamp);
                         delta_x = left_line_dist;
 											  if (obstacle_mode_flag == RIGHT_OBSTACLE)
 												{
@@ -94,7 +93,7 @@ extern void SysTick_Handler()
 										}
                     else // ob on left, go to right
 										{
-											  printf("left, %d, %d\n", obstacle_mode_flag, last_obstacle_time_stamp);
+											  //printf("left, %d, %d\n", obstacle_mode_flag, last_obstacle_time_stamp);
                         delta_x = right_line_dist;
 											  if (obstacle_mode_flag == LEFT_OBSTACLE)
 												{
@@ -102,8 +101,9 @@ extern void SysTick_Handler()
 													last_obstacle_time_stamp = systick_count;
 												}
 										}
-                    //controller(1, 1, 1);
                 }
+								// controller(1, 1, 1);
+						}
             else // control_mode == 1, zk control
                 simple_controller();
 		}

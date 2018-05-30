@@ -20,7 +20,7 @@
 #define RIGHT_OBSTACLE 2
 
 // parameters for overall controller
-#define cart_width 200 // need more precision!
+#define cart_width 180 // need more precision!
 #define ccd_distance 300 // sees the line 30 cm ahead, needs modification!
 #define lane_width 200 // needs modification!
 
@@ -36,7 +36,7 @@
 #define ultra_period 107 // trigger ultrasonic module every 107ms 
 #define encoder_period 47 // update every 50 ms
 #define control_period 103
-#define ccd_exposure_period 10
+#define ccd_exposure_period 5
 #define vel_control_period 53 // 14 normally, 50 for debug
 
 #endif
