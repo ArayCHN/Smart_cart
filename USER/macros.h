@@ -33,6 +33,6 @@
 #define encoder_period 50 // update every 50 ms
 #define control_period 103
 #define ccd_exposure_period 10
-#define vel_control_period 14
+#define vel_control_period 100 // 14 normally, 50 for debug
 
 #endif

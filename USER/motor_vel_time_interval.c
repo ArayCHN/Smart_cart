@@ -6,7 +6,7 @@
 
 extern int cnt_ch1, prev_cnt_ch1, cnt_ch4, prev_cnt_ch4, delta_t1, delta_t4, cycles1, cycles4, vl2, vr2;
 extern u32 num, den;
-u8 positive_direction = 1;
+u8 positive_direction_l2 = 1, positive_direction_r2 = 1;
 static int value_series[2][6], sum[2]; // value_series[0][i]: recent 5 values of v_l2; value_series[1][i]: recent 5 values of v_r2; 
 // sum[0]: sum of recent 5 values of v_l2
 
@@ -29,9 +29,13 @@ extern void TIM1_CC_IRQHandler()
 {
 	  int tmp;
     if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_5) == SET)
-        positive_direction = 1;
+        positive_direction_l2 = 1;
     else
-        positive_direction = 0; // determine direction
+        positive_direction_l2 = 0; // determine direction
+		if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_6) == SET)
+        positive_direction_r2 = 1;
+    else
+        positive_direction_r2 = 0; // determine direction
     if (TIM_GetITStatus(TIM1, TIM_IT_CC1) == SET) // if it is channel 1
     {
         TIM_ClearITPendingBit(TIM1, TIM_IT_CC1);
@@ -43,7 +47,7 @@ extern void TIM1_CC_IRQHandler()
         den = spokes_num * reduction_ratio * delta_t1;
 			  tmp = vl2;
         vl2 = num / den; // u32, only positive!
-        if (!positive_direction) vl2 = - vl2;
+        if (!positive_direction_l2) vl2 = - vl2;
         // if (vl2 > 1000); // debug
 			  // vl2 = mean_filter(vl2, 0);
 			  if (abs(vl2) > 1000) vl2 = tmp;
@@ -63,7 +67,7 @@ extern void TIM1_CC_IRQHandler()
 			  tmp = vr2;
         vr2 = num / den;
 			// vr2 = mean_filter(vl2, 0);
-        if (!positive_direction) vr2 = - vr2;
+        if (!positive_direction_r2) vr2 = - vr2;
 			  if (abs(vr2) > 1000) vr2 = tmp;
         prev_cnt_ch4 = cnt_ch4;
         cycles4 = 0;

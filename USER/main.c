@@ -8,7 +8,7 @@
 
 int left_line_dist, right_line_dist, mid_position_dist; // in ccd
 
-u16 prescaler = 72 - 1, motor_pwm_period = 999, pulse = 300; // 0~65535, for motor
+u16 prescaler = 72 - 1, motor_pwm_period = 999, pulse = 0; // 0~65535, for motor
 int vl1_target, vl2_target, vr1_target, vr2_target; // target vel
 #include "motor_pwm.h"
 
@@ -106,9 +106,9 @@ int main()
         }
         if (time_vel_control) // more frequent, small loop controls velocity
         {
-            // printf("vl1 %d vl2 %d\n", vl1, vl2); // debug
+            printf("vl1 %d vl2 %d vr1 %d  vr2 %d\n", vl1, vl2, vr1, vr2); // debug
             // now we have vl1, vr1, vl2, vr2 (the former two come from encoder, latter two come from time interval mode)
-            if (abs(vl1 - vl2) > abs(vl1) / 3) // if two vel deviate too much, go with encoder mode
+            /*if (abs(vl1 - vl2) > abs(vl1) / 3) // if two vel deviate too much, go with encoder mode
                 vl2 = vl1;
             else
                 vl1 = (vl1 + vl2) / 2;
@@ -116,13 +116,18 @@ int main()
                 vr2 = vr1;
             else
                 vr1 = (vr1 + vr2) / 2;
-            motor_pid_controller(1, 1, 1); // kp, ki, kd
+					*/
+            //motor_pid_controller(1, 1, 1); // kp, ki, kd
         }
         if (time_ultra) Ultrasonic_Trig();
         if (time_control)
         {
+					  vl1_target = 100;
+					  vl2_target = 100;
+					  vr1_target = 100;
+					  vr2_target = 100;
             ccd_get_line();
-            if (control_mode == 0) // wr control
+            /*if (control_mode == 0) // wr control
                 if (obstacle_mode_flag == NONE_OBSTACLE && systick_count - last_obstacle_time_stamp > 2000)
                 // no obstacle detected now by ultrasonic module and, last obstacle was at least 2 secs ago, now safe!
                 {
@@ -147,6 +152,7 @@ int main()
                 }
             else // control_mode == 1, zk control
                 simple_controller();
+								*/
         }
     }
     // return 0; - never carried out
