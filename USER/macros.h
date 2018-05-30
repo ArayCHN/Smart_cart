@@ -30,9 +30,9 @@
 // paramters for the frequencies at which each component is triggered
 #define sysTick_period 1 // enter sysTick interrupt every 1 ms
 #define ultra_period 107 // trigger ultrasonic module every 107ms 
-#define encoder_period 50 // update every 50 ms
+#define encoder_period 47 // update every 50 ms
 #define control_period 103
 #define ccd_exposure_period 10
-#define vel_control_period 100 // 14 normally, 50 for debug
+#define vel_control_period 53 // 14 normally, 50 for debug
 
 #endif

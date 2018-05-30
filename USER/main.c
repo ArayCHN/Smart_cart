@@ -46,31 +46,74 @@ STRU_BODYCONTROL_TARGET BodyControlTarget;
 
 // below: systick, whose exception mechanism is shared among several devices
 int omega, v_target;
-static int systick_count, time_ccd_exposure, time_control, time_ultra, time_vel_encoder_update, time_vel_control;
+static int systick_count, time_ccd_exposure, time_ultra;
 extern void SysTick_Handler()
 {
     systick_count ++; // every 1 ms
+	  //printf("%d\n", systick_count);
     systick_count %= 3600000; // an hour, long enough!
     if (systick_count % ccd_exposure_period == 0)
         time_ccd_exposure = 1; // time for ccd exposure
     else
         time_ccd_exposure = 0;
     if (systick_count % encoder_period == 0)
-        time_vel_encoder_update = 1; // time to calculate velocity!
-    else
-        time_vel_encoder_update = 0;
+		{
+        encoder_vel_calc(); // update vl1, vl2
+				motor_pid_controller(1, 1, 1); // kp, ki, kd
+		}
     if (systick_count % ultra_period == 0)
         time_ultra = 1;
     else
         time_ultra = 0;
     if (systick_count % control_period == 0)
-        time_control = 1;
-    else
-        time_control = 0;
+		{
+						vl1_target = 300;
+					  vl2_target = 300;
+					  vr1_target = 300;
+					  vr2_target = 300;
+            ccd_get_line();
+            /*if (control_mode == 0) // wr control
+                if (obstacle_mode_flag == NONE_OBSTACLE && systick_count - last_obstacle_time_stamp > 2000)
+                // no obstacle detected now by ultrasonic module and, last obstacle was at least 2 secs ago, now safe!
+                {
+                    //printf("none!\n");
+                    delta_x = mid_position_dist;
+                    controller(1, 1, 1); // should be put on a time basis instead of always running!
+                }
+                else
+                {
+                    last_obstacle_time_stamp = systick_count; // record there has been an obstacle at this time stamp
+                    if (obstacle_mode_flag == RIGHT_OBSTACLE || (obstacle_mode_flag == NONE_OBSTACLE && last_obstacle_mode_flag == RIGHT_OBSTACLE)) // ob on right, go to left
+										{
+                        delta_x = left_line_dist;
+											  last_obstacle_mode_flag = RIGHT_OBSTACLE;
+										}
+                    else // ob on left, go to right
+										{
+                        delta_x = right_line_dist;
+											  last_obstacle_mode_flag = LEFT_OBSTACLE;
+										}
+                    controller(1, 1, 1);
+                }
+            else // control_mode == 1, zk control
+                simple_controller();
+								*/
+		}
     if (systick_count % vel_control_period == 0)
-        time_vel_control = 1;
-    else
-        time_vel_control = 0;
+		{
+            //printf("vl1 %d vl2 %d vr1 %d  vr2 %d\n", vl1, vl2, vr1, vr2); // debug
+            // now we have vl1, vr1, vl2, vr2 (the former two come from encoder, latter two come from time interval mode)
+            /*if (abs(vl1 - vl2) > abs(vl1) / 3) // if two vel deviate too much, go with encoder mode
+                vl2 = vl1;
+            else
+                vl1 = (vl1 + vl2) / 2;
+            if (abs(vr1 - vr2) > abs(vr1) / 3) // if two vel deviate too much, go with encoder mode
+                vr2 = vr1;
+            else
+                vr1 = (vr1 + vr2) / 2;
+					*/
+           motor_pid_controller(1, 1, 1); // kp, ki, kd
+		}
     return;
 }
 
@@ -99,61 +142,16 @@ int main()
 
     while (1)
     {
-        if (time_ccd_exposure) Read_CCD(); // need to change the frequency this is carried out!
-        if (time_vel_encoder_update) // time to update velocity!
-        {
-            encoder_vel_calc(); // update vl1, vl2
-        }
-        if (time_vel_control) // more frequent, small loop controls velocity
-        {
-            printf("vl1 %d vl2 %d vr1 %d  vr2 %d\n", vl1, vl2, vr1, vr2); // debug
-            // now we have vl1, vr1, vl2, vr2 (the former two come from encoder, latter two come from time interval mode)
-            /*if (abs(vl1 - vl2) > abs(vl1) / 3) // if two vel deviate too much, go with encoder mode
-                vl2 = vl1;
-            else
-                vl1 = (vl1 + vl2) / 2;
-            if (abs(vr1 - vr2) > abs(vr1) / 3) // if two vel deviate too much, go with encoder mode
-                vr2 = vr1;
-            else
-                vr1 = (vr1 + vr2) / 2;
-					*/
-            //motor_pid_controller(1, 1, 1); // kp, ki, kd
-        }
-        if (time_ultra) Ultrasonic_Trig();
-        if (time_control)
-        {
-					  vl1_target = 100;
-					  vl2_target = 100;
-					  vr1_target = 100;
-					  vr2_target = 100;
-            ccd_get_line();
-            /*if (control_mode == 0) // wr control
-                if (obstacle_mode_flag == NONE_OBSTACLE && systick_count - last_obstacle_time_stamp > 2000)
-                // no obstacle detected now by ultrasonic module and, last obstacle was at least 2 secs ago, now safe!
-                {
-                    //printf("none!\n");
-                    delta_x = mid_position_dist;
-                    controller(1, 1, 1); // should be put on a time basis instead of always running!
-                }
-                else
-                {
-                    last_obstacle_time_stamp = systick_count; // record there has been an obstacle at this time stamp
-                    if (obstacle_mode_flag == RIGHT_OBSTACLE || (obstacle_mode_flag == NONE_OBSTACLE && last_obstacle_mode_flag == RIGHT_OBSTACLE)) // ob on right, go to left
-										{
-                        delta_x = left_line_dist;
-											  last_obstacle_mode_flag = RIGHT_OBSTACLE;
-										}
-                    else // ob on left, go to right
-										{
-                        delta_x = right_line_dist;
-											  last_obstacle_mode_flag = LEFT_OBSTACLE;
-										}
-                    controller(1, 1, 1);
-                }
-            else // control_mode == 1, zk control
-                simple_controller();
-								*/
-        }
+        if (time_ccd_exposure) 
+				{
+					time_ccd_exposure = 0;
+					  Read_CCD(); // need to change the frequency this is carried out!
+				}
+        if (time_ultra)
+				{
+					time_ultra = 0;
+					Ultrasonic_Trig();
+				}
     }
     // return 0; - never carried out
 }
