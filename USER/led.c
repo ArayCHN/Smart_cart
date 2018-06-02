@@ -1,4 +1,5 @@
 #include "led.h"
+#include "stm32f10x.h"
 
 void LED_Init(void)
 {
@@ -15,4 +16,3 @@ void LED_Init(void)
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
 	GPIO_SetBits(GPIOB,GPIO_Pin_14);
 }
- 

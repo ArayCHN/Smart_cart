@@ -1,4 +1,6 @@
-#include "sys.h"
+#include "stm32f10x.h"
+#include <stdio.h>
+#include "macros.h"
 #include "bluetooth.h"
 #include "led.h"
 	  
@@ -7,7 +9,7 @@ u8 BluetoothControlMode = 0; // 0-stop, 1-lane-tracking, 2,3,4,5: left, right, f
 
 //USART3 TxD=GPIOB10(PD8)   RxD=GPIOB11(PD9)
 void Bluetooth_Init(u32 bound){
-    GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure;
 	USART_InitTypeDef USART_InitStructure;
 	NVIC_InitTypeDef NVIC_InitStructure;
 	 

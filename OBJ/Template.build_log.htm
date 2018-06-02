@@ -37,17 +37,40 @@ motor_vel_encoder_mode.h(9): warning:  #1-D: last line of file ends without a ne
   #endif
 ultrasonic.h(9): warning:  #1-D: last line of file ends without a newline
   #endif
-main.c(36): warning:  #1295-D: Deprecated declaration simple_controller_init - give arg types
+main.c(39): warning:  #1295-D: Deprecated declaration simple_controller_init - give arg types
   void simple_controller_init();
-main.c(37): warning:  #1295-D: Deprecated declaration simple_controller - give arg types
+main.c(40): warning:  #1295-D: Deprecated declaration simple_controller - give arg types
   void simple_controller();
-main.c(41): warning:  #1295-D: Deprecated declaration ccd_get_line - give arg types
+main.c(44): warning:  #1295-D: Deprecated declaration ccd_get_line - give arg types
   void ccd_get_line();
 main.c: 8 warnings, 0 errors
+compiling motor_pwm.c...
+compiling motor_vel_encoder_mode.c...
+motor_vel_encoder_mode.c(125): warning:  #1-D: last line of file ends without a newline
+  }
+motor_vel_encoder_mode.c: 1 warning, 0 errors
+compiling motor_vel_time_interval.c...
+compiling ultrasonic.c...
+delay.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif
+ultrasonic.c(178): warning:  #1-D: last line of file ends without a newline
+  }
+ultrasonic.c: 2 warnings, 0 errors
+compiling controller.c...
+controller.h(15): warning:  #1-D: last line of file ends without a newline
+  }STRU_BODYCONTROL_TARGET;
+controller.c: 1 warning, 0 errors
+compiling ccd.c...
+delay.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif
+ccd.c(107): warning:  #128-D: loop is not reachable
+        for(pixel=0;pixel<64;pixel++)
+ccd.c: 2 warnings, 0 errors
+compiling Bluetooth.c...
 linking...
-Program Size: Code=10160 RO-data=464 RW-data=316 ZI-data=1844  
+Program Size: Code=11904 RO-data=336 RW-data=372 ZI-data=1844  
 FromELF: creating hex file...
-"..\OBJ\Template.axf" - 0 Error(s), 8 Warning(s).
+"..\OBJ\Template.axf" - 0 Error(s), 14 Warning(s).
 
 <h2>Collection of Component include folders:</h2>
   C:\Users\Rui\Tsinghua\classes\mechatronics_system_lab\stm32project\USER\RTE

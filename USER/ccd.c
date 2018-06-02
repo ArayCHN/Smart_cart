@@ -103,6 +103,7 @@ void Read_CCD(void) // evrey 5-15 ms
 
 void ValueCompensate(void)
 {
+	return; // debug
 	for(pixel=0;pixel<64;pixel++)
 	{
 		CCD[pixel]+=CcdCompensationValue[63-pixel];
@@ -242,9 +243,9 @@ void ccd_get_line(void)
     SelectThreshold();
     SearchLine();
     // after this, middle line / left line / right line will be obtained
-    right_line_dist = (RightLine - 63) / 128 * ccd_width; // int val, can be positive or negative!
-    left_line_dist = (LeftLine - 63) / 128 * ccd_width;
-    mid_position_dist = (MiddlePosition - 63) / 128 * ccd_width; // these are delta_x
+    right_line_dist = (RightLine - 63 + single_line_displacement) * ccd_width / 128; // int val, can be positive or negative!
+    left_line_dist = (LeftLine - 63 - single_line_displacement) * ccd_width / 128;
+    mid_position_dist = (MiddlePosition - 63) * ccd_width / 128; // these are delta_x
     return;
 }
 

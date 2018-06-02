@@ -20,26 +20,28 @@ void controller(u8 kp, u8 ki, u8 kd) // these params require tuning!
     // the larger the deviation, the larger 3000/R is, the smaller the turning radius
     // R: by default (calculation), turns right. negative R means turning left.
     err = delta_x; // returned from zhukai, should be double line error now!
+	  // printf("err:%d\n", delta_x);
     // delta_x req: if the line midpoint is leaning to right, delta_x > 0
     delta_R_inverse = kp * (err - err1) + ki * err + kd * (err - 2 * err1 + err2);
+	  delta_R_inverse /= 10;
     err2 = err1;
     err1 = err;
     R_inverse += delta_R_inverse;
-    R = 3000 / R_inverse;
+    R = 40000 / R_inverse;
     R_abs = abs(R);
     if (R_abs >= 1000)
-        v_CoM = 300; // need to adjust!! define in macro, max_vel, mid_vel, min_vel
+        v_CoM = max_vel; // need to adjust!! define in macro, max_vel, mid_vel, min_vel
     else
         if (R_abs >= 50)
-            v_CoM = 100;
+            v_CoM = mid_vel;
         else
-            v_CoM = 50;
+            v_CoM = min_vel;
     // solve for vr1, vr2, vl1, vl2 based on v_CoM and R
     // R = cart_width * (vr1 + vr2 + vl1 + vl2) / (vr1 - vl1 + vr2 - vl2) / 2; // is precision good? MAY REQUIRE CHANGE!
     // R > 0: turn right; R < 0: turn left
-    vl1_target = v_CoM * (1 + cart_width / R / 2);
+    vl1_target = v_CoM + v_CoM * cart_width / R / 2;
     vl2_target = vl1_target; // v_CoM * (1 + cart_width / R / 2);
-    vr1_target = v_CoM * (1 - cart_width / R / 2);
+    vr1_target = v_CoM - v_CoM * cart_width / R / 2;
     vr2_target = vr1_target; // v_CoM * (1 - cart_width / R / 2);
     return;
 }

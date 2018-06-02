@@ -7,6 +7,7 @@
 #include <stdlib.h> // abs()
 
 #include "Bluetooth.h"
+#include "led.h"
 
 int left_line_dist, right_line_dist, mid_position_dist; // in ccd
 
@@ -41,6 +42,7 @@ void simple_controller();
 // definitions for linear ccd
 int delta_x;
 void ccd_get_line();
+extern int MiddlePosition;
 
 // for zhukai's simple controller
 STRU_BODYCONTROL_INFO BodyControlInfo; // used in simple_controller() in controller.c
@@ -70,15 +72,15 @@ extern void SysTick_Handler()
     switch (BluetoothControlMode)
     {
         case STOP:
-            vl1_target = 0; vl2_target = 0; vr1_target = 0; vr2_target = 0; break;
+            vl1_target = 0; vl2_target = 0; vr1_target = 0; vr2_target = 0; MiddlePosition = 64; break;
         case LEFT:
-            vl1_target = -20; vl2_target = -20; vr1_target = 20; vr2_target = 20; break;
+            vl1_target = -vturn; vl2_target = -vturn; vr1_target = vturn; vr2_target = vturn; break;
         case RIGHT:
-            vl1_target = 20; vl2_target = 20; vr1_target = -20; vr2_target = -20; break;
+            vl1_target = vturn; vl2_target = vturn; vr1_target = -vturn; vr2_target = -vturn; break;
         case FORWARD:
-            vl1_target = 30; vl2_target = 30; vr1_target = 30; vr2_target = 30; break;
+            vl1_target = vconst; vl2_target = vconst; vr1_target = vconst; vr2_target = vconst; break;
         case BACKWARD:
-            vl1_target = -30; vl2_target = -30; vr1_target = -30; vr2_target = -30; break;
+            vl1_target = -vconst; vl2_target = -vconst; vr1_target = -vconst; vr2_target = -vconst; break;
         default: break;
     }
 
@@ -90,6 +92,8 @@ extern void SysTick_Handler()
                 if (obstacle_mode_flag == NONE_OBSTACLE && systick_count - last_obstacle_time_stamp > obstacle_time_threshold)
                 // no obstacle detected now by ultrasonic module and, last obstacle was at least 3 secs ago, now safe!
                 {
+									  GPIO_SetBits(GPIOB,GPIO_Pin_14);
+									  GPIO_SetBits(GPIOB,GPIO_Pin_13);
                     //printf("none!\n");
                     delta_x = mid_position_dist;
                 }
@@ -97,8 +101,9 @@ extern void SysTick_Handler()
                 {
                     if (obstacle_mode_flag == RIGHT_OBSTACLE || (obstacle_mode_flag == NONE_OBSTACLE && last_obstacle_mode_flag == RIGHT_OBSTACLE)) // ob on right, go to left
 										{
+											  GPIO_ResetBits(GPIOB,GPIO_Pin_14);
 											  //printf("right, %d, %d\n", obstacle_mode_flag, last_obstacle_time_stamp);
-                        delta_x = left_line_dist;
+                        delta_x = left_line_dist + 10;
 											  if (obstacle_mode_flag == RIGHT_OBSTACLE)
 												{
 													last_obstacle_mode_flag = RIGHT_OBSTACLE;
@@ -107,6 +112,7 @@ extern void SysTick_Handler()
 										}
                     else // ob on left, go to right
 										{
+											  GPIO_ResetBits(GPIOB,GPIO_Pin_13);
 											  //printf("left, %d, %d\n", obstacle_mode_flag, last_obstacle_time_stamp);
                         delta_x = right_line_dist;
 											  if (obstacle_mode_flag == LEFT_OBSTACLE)
@@ -116,7 +122,7 @@ extern void SysTick_Handler()
 												}
 										}
                 }
-								// controller(1, 1, 1);
+								controller(20, 3, 30);
             }
             else // control_mode == 1, zk control
                 simple_controller();
@@ -128,12 +134,12 @@ extern void SysTick_Handler()
             /*if (abs(vl1 - vl2) > abs(vl1) / 3) // if two vel deviate too much, go with encoder mode
                 vl2 = vl1;
             else
-                vl1 = (vl1 + vl2) / 2;
+                vl1 = vl2;
             if (abs(vr1 - vr2) > abs(vr1) / 3) // if two vel deviate too much, go with encoder mode
                 vr2 = vr1;
             else
-                vr1 = (vr1 + vr2) / 2;
-					*/
+                vr1 = vr2;*/
+					
            motor_pid_controller(1, 1, 1); // kp, ki, kd
 		}
     return;

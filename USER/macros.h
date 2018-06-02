@@ -25,18 +25,22 @@
 #define lane_width 200 // needs modification!
 
 #define ccd_width 600 // 600 mm width for each ccd shot
+#define single_line_displacement 5 // when tracking single line, go further 10 pixels
 
-#define control_mode 0 // wr control
-#define max_vel 500
-#define mid_vel 200
-#define min_vel 100
+#define control_mode 0 // 0-wr control, 1-zk control
+#define max_vel 900
+#define mid_vel 500
+#define min_vel 300
+
+#define vconst 800
+#define vturn 150
 
 // paramters for the frequencies at which each component is triggered
 #define sysTick_period 1 // enter sysTick interrupt every 1 ms
 #define ultra_period 107 // trigger ultrasonic module every 107ms 
-#define encoder_period 47 // update every 50 ms
-#define control_period 103
-#define ccd_exposure_period 5
-#define vel_control_period 53 // 14 normally, 50 for debug
+#define encoder_period 27 // update every 50 ms
+#define control_period 69
+#define ccd_exposure_period 8
+#define vel_control_period 27 // 14 normally, 50 for debug
 
 #endif
