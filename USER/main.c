@@ -6,6 +6,8 @@
 #include "controller.h"
 #include <stdlib.h> // abs()
 
+#include "Bluetooth.h"
+
 int left_line_dist, right_line_dist, mid_position_dist; // in ccd
 
 u16 prescaler = 72 - 1, motor_pwm_period = 999, pulse = 0; // 0~65535, for motor
@@ -58,21 +60,33 @@ extern void SysTick_Handler()
     if (systick_count % encoder_period == 0)
 		{
         encoder_vel_calc(); // update vl1, vl2
-				motor_pid_controller(1, 1, 1); // kp, ki, kd
+        motor_pid_controller(1, 1, 1); // kp, ki, kd
 		}
     if (systick_count % ultra_period == 0)
         time_ultra = 1;
     else
         time_ultra = 0;
-    if (systick_count % control_period == 0)
+
+    switch (BluetoothControlMode)
+    {
+        case STOP:
+            vl1_target = 0; vl2_target = 0; vr1_target = 0; vr2_target = 0; break;
+        case LEFT:
+            vl1_target = -20; vl2_target = -20; vr1_target = 20; vr2_target = 20; break;
+        case RIGHT:
+            vl1_target = 20; vl2_target = 20; vr1_target = -20; vr2_target = -20; break;
+        case FORWARD:
+            vl1_target = 30; vl2_target = 30; vr1_target = 30; vr2_target = 30; break;
+        case BACKWARD:
+            vl1_target = -30; vl2_target = -30; vr1_target = -30; vr2_target = -30; break;
+        default: break;
+    }
+
+    if (BluetoothControlMode == TRACK && systick_count % control_period == 0)
 		{
-			      /*vl1_target = 0; // debug
-					  vl2_target = 0;
-					  vr1_target = 0;
-					  vr2_target = 0;*/
             ccd_get_line();
             if (control_mode == 0) // wr control
-						{
+            {
                 if (obstacle_mode_flag == NONE_OBSTACLE && systick_count - last_obstacle_time_stamp > obstacle_time_threshold)
                 // no obstacle detected now by ultrasonic module and, last obstacle was at least 3 secs ago, now safe!
                 {
@@ -103,7 +117,7 @@ extern void SysTick_Handler()
 										}
                 }
 								// controller(1, 1, 1);
-						}
+            }
             else // control_mode == 1, zk control
                 simple_controller();
 		}
@@ -134,7 +148,10 @@ void systickInit()
 
 int main()
 {
-   NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2); // priority group config, 2 bits preemption, 2 bits sub
+    LED_Init();
+    Bluetooth_Init(9200);
+    
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2); // priority group config, 2 bits preemption, 2 bits sub
     // priority group config must be before anything!
     TIMx_PWMInit(prescaler, pulse); // set timer for motor PWM
     EncodeInit(); // use encoder mode for motor
@@ -151,15 +168,15 @@ int main()
     while (1)
     {
         if (time_ccd_exposure) 
-				{
-					time_ccd_exposure = 0;
-					  Read_CCD(); // need to change the frequency this is carried out!
-				}
+			{
+				time_ccd_exposure = 0;
+				Read_CCD(); // need to change the frequency this is carried out!
+			}
         if (time_ultra)
-				{
-					time_ultra = 0;
-					Ultrasonic_Trig();
-				}
+			{
+				time_ultra = 0;
+				Ultrasonic_Trig();
+			}
     }
     // return 0; - never carried out
 }

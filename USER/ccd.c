@@ -11,15 +11,17 @@
 u8 CCD[128]={0};
 
 u8 pixel=0;
-int LeftLine=40;
+int LeftLine=50;
 u8 LeftLineState=0;
-int RightLine=88;
+int RightLine=78;
 u8 RightLineState=0;
 int MiddlePosition=64;
 
 extern int left_line_dist, right_line_dist, mid_position_dist;
 
-const u8 CcdCompensationValue[128]={0};
+const u8 CcdCompensationValue[63]={0,0,0,0,0,0,0,0,0,0,1,1,1,2,2,3,3,4,4,5,5,6,7,7,8,9,10,11,12,12,
+13,14,15,17,18,19,20,21,23,24,25,26,28,29,31,32,34,35,37,39,40,42,44,46,47,49,51,53,55,57,59,61,63};
+
 u8 CcdFiltered[128];
 int CcdDifferential[127];
 int CcdDifferentialMax=0;
@@ -74,7 +76,7 @@ u16 Get_Adc(u8 ch) // ch: channel
 }
 
 
-void Read_CCD(void) // evrey 10-15 ms
+void Read_CCD(void) // evrey 5-15 ms
 {
 	u8 i=0,pixel=0;
 	GPIO_ResetBits(GPIOA, GPIO_Pin_7); // CCD_SI=0;PA7
@@ -99,13 +101,16 @@ void Read_CCD(void) // evrey 10-15 ms
     }
 }
 
-
 void ValueCompensate(void)
 {
-    for(pixel=0;pixel<128;pixel++)
-    {
-        CCD[pixel]+=CcdCompensationValue[pixel];
-    }
+	for(pixel=0;pixel<64;pixel++)
+	{
+		CCD[pixel]+=CcdCompensationValue[63-pixel];
+	}
+	for(pixel=64;pixel<128;pixel++)
+	{
+		CCD[pixel]+=CcdCompensationValue[pixel-64];
+	}
 }
 
 void MedianFilter(void)
@@ -129,8 +134,12 @@ u8 GetMid(u8 a, u8 b, u8 c)
 
 void SelectThreshold(void)
 {
-    for(pixel=0; pixel<127; pixel++)
+    CcdDifferential[0]=CcdFiltered[1]-CcdFiltered[0];
+    CcdDifferentialMax=CcdDifferential[0];           
+    CcdDifferentialMin=CcdDifferential[0];
+    for(pixel=1; pixel<127; pixel++)
     {
+
         CcdDifferential[pixel]=CcdFiltered[pixel+1]-CcdFiltered[pixel];
         if(CcdDifferentialMax<CcdDifferential[pixel])
         {
@@ -141,7 +150,7 @@ void SelectThreshold(void)
             CcdDifferentialMin=CcdDifferential[pixel];
         }
     }
-    CcdDifferentialThreshold=CcdDifferentialMax/2;
+    CcdDifferentialThreshold=CcdDifferentialMax/2-5;
 }
 
 void SearchLine(void)
@@ -151,8 +160,8 @@ void SearchLine(void)
     u8 FallingEdge;
     u8 breadth;
     int CcdDifferentialThresholdDown=-CcdDifferentialThreshold;   
-    if(MiddlePosition<26) {MiddlePosition=26;}
-    else if(MiddlePosition>101) {MiddlePosition=101;}
+    if(MiddlePosition<8) {MiddlePosition=8;}
+    else if(MiddlePosition>120) {MiddlePosition=120;}
     // search for right line
     for(pixel=MiddlePosition;pixel<127;pixel++)
     {
@@ -170,7 +179,7 @@ void SearchLine(void)
         }
     }
     // determine right line ligitimacy
-    if(State==2&&breadth>3&&breadth<15)
+    if(State==2&&breadth>1&&breadth<10)
     {
         RightLine=(RisingEdge+FallingEdge)/2;
         RightLineState=1;
@@ -198,7 +207,7 @@ void SearchLine(void)
         }
     }   
     // determine left line validity
-    if(State==2&&breadth>3&&breadth<15)
+    if(State==2&&breadth>1&&breadth<10)
     {
         LeftLine=(RisingEdge+FallingEdge)/2;
         LeftLineState=1;
@@ -217,11 +226,11 @@ void SearchLine(void)
     }
     if(LeftLineState==1&&RightLineState==0)
     {
-        MiddlePosition=LeftLine+25;
+        MiddlePosition=LeftLine+12;
     }
     else if(LeftLineState==0&&RightLineState==1)
     {
-        MiddlePosition=RightLine-25;
+        MiddlePosition=RightLine-12;
     }
     return;
 }
@@ -238,3 +247,4 @@ void ccd_get_line(void)
     mid_position_dist = (MiddlePosition - 63) / 128 * ccd_width; // these are delta_x
     return;
 }
+
