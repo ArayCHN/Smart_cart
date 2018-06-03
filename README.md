@@ -33,13 +33,13 @@ Also, not every link provided here works fine. They are just references and it i
 
 ## Design Overview
 ![](media/up.jpg)
-![](media/face.jpg)
+![](media/face.JPG)
 
 The overall design of the cart is shown above. It mainly consists of mechanical parts, circuits and software.
 
 ## Mechanical Design
 Here is the general design of the cart.
-![](media/Assem1.pdf)
+![](media/Assem1.PDF)
 Mechanical structures can be found in ```/parts_solidoworks```. The upper and lower board of the cart were laser-cut and other parts were 3D-printed.
 
 ## Circuit Configuration
