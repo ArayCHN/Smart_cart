@@ -1,7 +1,11 @@
-# Smart_cart
+# Smart cart
 Rui Wang
 
 ### This project is for course Mechatronics Systems Lab 2018 spring, offered by Dpt. O'MechE at Tsinghua University.
+
+![](media/run.gif)
+
+A link to the video of the cart running is available [here](https://youtu.be/E4SRxa9p3hk).
 
 ## Basic Information
 **Goal**: 
@@ -27,8 +31,16 @@ Generally it is recommended to use HAL library, while standard peripheral librar
 
 Also, not every link provided here works fine. They are just references and it is highly recommended to get the idea and implement your own code. My code, however, is guaranteed to work on my own hardware settings.
 
+## Design Overview
+![](media/up.jpg)
+![](media/face.jpg)
+
+The overall design of the cart is shown above. It mainly consists of mechanical parts, circuits and software.
+
 ## Mechanical Design
-Mechanical structures will be uploaded shortly.
+Here is the general design of the cart.
+![](media/Assem1.pdf)
+Mechanical structures can be found in ```/parts_solidoworks```. The upper and lower board of the cart were laser-cut and other parts were 3D-printed.
 
 ## Circuit Configuration
 Circuit config will be uploaded shortly.
@@ -96,6 +108,17 @@ This will result in a rough distance threshold of 510mm.
 * the ultrasonic module must be connected to a voltage source of 5V, not 3.3V! Otherwise there might be weird problems such as a lot of wrong rising edges on the ECHO pin.
 * The time interval between 2 trigger should be longer than 60ms. Otherwise, the echos and triggers will overlap and it is impossible to distinguish which echo is paired with which trigger.
 
+## Linear CCD
+
+A linear CCD returns 128 pixels on a line. The voltage of each pixel represents the brightness of a particular point, therefore indicating whether it is a black line or a white surface. This allows us to determine where the cart is relative to the center of the lane. In our implementation, linear CCD utilizes the ADC module on STM32.
+
+In order for us to track the double lines, it is important to make sure both lines are under tracking even when they are not in sight (for example, at a sharp turning, we will not be able to see one line).
+
+**Important tips:**
+
+* The linear CCD takes around 10 ms of exposure time. If it takes shorter time, we may need to use DMA instead of CPU to transmit data. Otherwise, it is taking up too much of the CPU resources.
+* Since CCD takes around 3 ms to transmit all the data, it should be interrupted when other events happen (such as velocity calculation).
+
 ## Motor PID Controller
 
 The motor controller is basically a PID controller that converges the motor velocity to target velocity. It is a small feedback loop within the large feedback loop introduced in the next section.
@@ -116,6 +139,15 @@ Note that we can take $k_i\Delta t$ and $\frac{k_d}{\Delta t}$ as two coefficien
 
 The general controller goes like the block diagram shown below:
 !!!TO BE COMPLETED!!!
+
+**Paramter Tuning**
+1. D is small
+2. 
+
+## Some thoughts
+
+* The controller turns out to be very robust. Even though the motor controller is not tuned perfect, and one of our motor is slightly broken, the cart is still running relatively well. This is because PID utilizes feedback and does not rely heavily on the model of the car.
+* Becasue CCD returns 128 values, the resolution is high enough for us to use a PID controller. If, for example, infrared sensors are used, the resolution will be much lower (4~6), and the cart will not be able to know where exactly it is relative to the lane. The result of the infrared sensor cannot be used in a PID controller.
 
 ## List of files under  /USER
 ```
