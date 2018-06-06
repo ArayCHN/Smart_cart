@@ -13,7 +13,10 @@
 #define time_interval_reload 60000
 #define time_interval_prescaler 100
 
-#define obstacle_time_threshold 3000 // 3s
+#define obstacle_time_threshold 1000 // 3s
+// which ultrasonic module is emitting
+#define LEFT_ULTRA 0
+#define RIGHT_ULTRA 1
 // which side the obstacle is on
 #define NONE_OBSTACLE 0
 #define LEFT_OBSTACLE 1
@@ -25,10 +28,10 @@
 #define lane_width 200 // needs modification!
 
 #define ccd_width 600 // 600 mm width for each ccd shot
-#define single_line_displacement 5 // when tracking single line, go further 10 pixels
+#define single_line_displacement 10 // when tracking single line, go further 10 pixels
 
 #define control_mode 0 // 0-wr control, 1-zk control
-#define max_vel 900
+#define max_vel 800
 #define mid_vel 500
 #define min_vel 300
 
@@ -37,7 +40,7 @@
 
 // paramters for the frequencies at which each component is triggered
 #define sysTick_period 1 // enter sysTick interrupt every 1 ms
-#define ultra_period 107 // trigger ultrasonic module every 107ms 
+#define ultra_period 67 // trigger ultrasonic module every 107ms 
 #define encoder_period 27 // update every 50 ms
 #define control_period 69
 #define ccd_exposure_period 8

@@ -31,6 +31,7 @@ int num, den;
 
 u8 obstacle_mode_flag = 0, last_obstacle_mode_flag = 0; // for ultrasonic, record if it is now in obstacle mode!
 int last_obstacle_time_stamp = -obstacle_time_threshold;
+u8 which_ultra = LEFT_ULTRA; // which ultrasonic to trigger
 #include "ultrasonic.h"
 
 // definitions for controller()!
@@ -122,7 +123,7 @@ extern void SysTick_Handler()
 												}
 										}
                 }
-								controller(20, 3, 30);
+								controller(20, 0, 30);
             }
             else // control_mode == 1, zk control
                 simple_controller();
@@ -181,6 +182,7 @@ int main()
         if (time_ultra)
 			{
 				time_ultra = 0;
+				which_ultra = !which_ultra;
 				Ultrasonic_Trig();
 			}
     }

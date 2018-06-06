@@ -14,7 +14,7 @@ void TIM2_Init(void)
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);  
     /* Time base configuration */
     TIM_DeInit(TIM2);
-    TIM_TimeBaseStructure.TIM_Period = 3000; // cnt > 3000 means > 50cm
+    TIM_TimeBaseStructure.TIM_Period = 1600; // cnt > 3000 means > 50cm, 2000 means > 30cm
     TIM_TimeBaseStructure.TIM_Prescaler = 71; // 1000000 cnts/s
     TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;  
     TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
@@ -93,23 +93,34 @@ void Ultrasonic_Init(void)
     NVIC_Init(&NVIC_InitStructure);
 }
 
-void Ultrasonic_Trig(void)
+void Ultrasonic_Trig()
 {
+	  extern u8 which_ultra;
     if (!bounce_flag) obstacle_mode_flag = NONE_OBSTACLE;
     bounce_flag = 0; // record if ultrasonic wave bounced back in the last emission within time threshold
+	  if (which_ultra == LEFT_ULTRA)
+		{
     GPIO_WriteBit(GPIOE, GPIO_Pin_0, Bit_SET);
-    GPIO_WriteBit(GPIOE, GPIO_Pin_2, Bit_SET);
     delay_us(15); // HOW to delay?
-    GPIO_WriteBit(GPIOE, GPIO_Pin_0, Bit_RESET);
+		GPIO_WriteBit(GPIOE, GPIO_Pin_0, Bit_RESET);
+		}
+		if (which_ultra == RIGHT_ULTRA)
+		{
+		GPIO_WriteBit(GPIOE, GPIO_Pin_2, Bit_SET);
+		delay_us(15);
     GPIO_WriteBit(GPIOE, GPIO_Pin_2, Bit_RESET);
+		}
     return;
 }
 
 void EXTI1_IRQHandler(void)
 {
+	  extern u8 which_ultra;
     if (EXTI_GetITStatus(EXTI_Line1) != RESET)
     {
 		EXTI_ClearITPendingBit(EXTI_Line1);
+				if (which_ultra != LEFT_ULTRA)
+					return;
         if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_1) == 1) // rising edge  
         {
             TIM_SetCounter(TIM2, 0);
@@ -136,10 +147,13 @@ void EXTI1_IRQHandler(void)
 
 void EXTI3_IRQHandler(void)
 {
+	  extern u8 which_ultra;
     if (EXTI_GetITStatus(EXTI_Line3) != RESET)
     {
         EXTI_ClearITPendingBit(EXTI_Line3);
-        if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_3) == 1) // rising edge  
+			  if (which_ultra != RIGHT_ULTRA)
+					return;
+        if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_3) == 1) // rising edge, left ultra  
         {
              TIM_SetCounter(TIM6, 0);
              tim6_reload_flag = 0;
@@ -157,7 +171,7 @@ void EXTI3_IRQHandler(void)
                     obstacle_mode_flag = RIGHT_OBSTACLE;
                 }
                 ultra_record_flag_r = 0;
-								printf(" %d ", TIM6->CNT);
+								//printf(" %d ", TIM6->CNT);
             }
         }
     }
