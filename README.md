@@ -35,15 +35,15 @@ Also, not every link provided here works fine. They are just references and it i
 ![](media/up.jpg)
 ![](media/face.JPG)
 
-The overall design of the cart is shown above. It mainly consists of mechanical parts, circuits and software.
+The overall design of the cart is shown above. It mainly consists of mechanical parts, circuits and software. You can request the original SOLIDWORKS files via [e-mail](wangrui15@mails.tsinghua.edu.cn)(good thru 08/2019).
 
 ## Mechanical Design
 Here is the general design of the cart.
-![](media/Assem1.PDF)
+![](media/Assem1.jpg)
 Mechanical structures can be found in ```/parts_solidoworks```. The upper and lower board of the cart were laser-cut and other parts were 3D-printed.
 
 ## Circuit Configuration
-Circuit config will be uploaded shortly.
+You can find details of circuit configuration in file _circuit.pdf_.
 
 ## Tests
 Here a list of basic information about standard peripherals used on STM32 are listed.
@@ -137,20 +137,23 @@ Note that we can take $k_i\Delta t$ and $\frac{k_d}{\Delta t}$ as two coefficien
 
 ## General Controller
 
-The general controller goes like the block diagram shown below:
-!!!TO BE COMPLETED!!!
+As said, there are two control loops, the overall loop controls the cart's distance from lane center and ultimately wants to coverge it to 0. The inner loop only controls the velocity to follow a certain value given by other functions.
+
+The general controller goes like the block diagram shown below:![](media/control.jpg)
+
+In the block diagram, the input, the target distance from lane center is set to be 0 so as to let the cart follow the lane. Next, instead of directly controlling the four velocities of motors, we control a special parameter - $\rho$. $\rho$ is defined to be the inverse of the turning radius of the cart $R$. The reason that we do not directly control the turing radius is that its initial state needs to be $+\infty$, which is not feasible. Therefore we set $\frac{1}{R}$ as an independent variable to control and we change it according to the cart's deviation from the lane center. Naturally, the farther the cart is off the lane, the larger $\rho$, hence the smaller $R$, meaning a sharper turn.
+
+Then we need to convert the turning radius back to four velocities so that our cart can understand what to do. Thanks to [this paper](https://ieeexplore.ieee.org/document/6563667/), which built a model and gave us this equation $R = W \frac{v_l - v_r}{v_l + v_r}$(where $W$ is the cart's width), we are able to calculate the velocities. Here we arbitrarily assume that the two wheels at the same side of the cart should run at the same speed. The velocity of our cart will be $v_{CoM} = \frac{v_{l1} + v_{l2} + v_{r1} + v_{r2}}{4}$. As long as we have $R$ and $v_{CoM}$, we should be able to work out $v$.
+
+Since normally a car needs to slow down at turning, we set three different $v_{CoM}$s according to the turning radius. However, a better method would be to implement a _smooth_ velocity, for example a $v_{CoM}$ that decreases as $R$ decreases.
 
 **Paramter Tuning**
+
 1. D is small
-2. 
+2. I is 0 - do not let fault of the past influence the present - since the cart has a non-constant input.
+
 
 ## Some thoughts
 
-* The controller turns out to be very robust. Even though the motor controller is not tuned perfect, and one of our motor is slightly broken, the cart is still running relatively well. This is because PID utilizes feedback and does not rely heavily on the model of the car.
+* The controller turns out to be very robust. Even though the motor controller is not tuned perfect, and one of our motor is slightly broken, the cart is still running relatively well. This is because PD utilizes feedback and does not rely heavily on the model of the car.
 * Becasue CCD returns 128 values, the resolution is high enough for us to use a PID controller. If, for example, infrared sensors are used, the resolution will be much lower (4~6), and the cart will not be able to know where exactly it is relative to the lane. The result of the infrared sensor cannot be used in a PID controller.
-
-## List of files under  /USER
-```
-retarget.c     for prinft() redirection
-motor_test.c   for motor test
-```
