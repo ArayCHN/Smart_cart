@@ -13,6 +13,11 @@ extern int obstacle_mode_flag;
 extern STRU_BODYCONTROL_INFO BodyControlInfo; // defined in main.c, used in simple_controller() in controller.c
 extern STRU_BODYCONTROL_TARGET BodyControlTarget;
 
+int Bias;
+int BiasAbs;
+int BiasLast=0;
+int BiasAddition;
+
 void controller(u8 kp, u8 ki, u8 kd) // these params require tuning!
 {
     // beta = acos(lane_width / ccd_line_length);
@@ -48,31 +53,38 @@ void controller(u8 kp, u8 ki, u8 kd) // these params require tuning!
 
 void simple_controller_init(void) // these val require tuning!
 {
-    BodyControlInfo.BodyAngularPIDKp = 20;
-    BodyControlInfo.BodyLinearPIDKp = 30;
-    BodyControlInfo.BodyLinearMAX = 400;
+    BodyControlInfo.BodyAngularPIDKp = 20;  //30,25,25,25,15
+    BodyControlInfo.BodyAngularPIDKd = 45;  //00,30,30,35,45
+    BodyControlInfo.BodyLinearPIDKp = 10;   //20,25,15,15,15
+    BodyControlInfo.BodyLinearPIDKd = 15;   //10,10,20,20,20
+    
+    BodyControlInfo.BodyLinearMAX = 800;    //600,650,650,800,800
     return;
 }
 
 void simple_controller(void) // from zhukai's code
 {
-	  int TargetPosition;
-	  int8_t Bias; u8 BiasAbs;
-	  extern int MiddlePosition, RightLine, LeftLine; // defined in ccd.c
+    int TargetPosition;
+    extern int MiddlePosition, RightLine, LeftLine; // defined in ccd.c
     if (obstacle_mode_flag == NONE_OBSTACLE)
         TargetPosition = MiddlePosition;
     else if (obstacle_mode_flag == LEFT_OBSTACLE)
-        TargetPosition = RightLine;
+        TargetPosition = RightLine+10;
     else
-        TargetPosition = LeftLine;
+        TargetPosition = LeftLine-10;
     Bias=TargetPosition-64;
+    
+    BiasAddition=Bias-BiasLast;          //
+    
     if (Bias>0)  {BiasAbs = Bias;}
     else         {BiasAbs = -Bias;}
-    BodyControlTarget.BodyTargetAngularVelocity = BodyControlInfo.BodyAngularPIDKp * Bias; 
-    BodyControlTarget.BodyTargetLinearVelocity = BodyControlInfo.BodyLinearMAX - BodyControlInfo.BodyLinearPIDKp * BiasAbs;
+    BodyControlTarget.BodyTargetAngularVelocity = BodyControlInfo.BodyAngularPIDKp * Bias+BodyControlInfo.BodyAngularPIDKd*BiasAddition; 
+    BodyControlTarget.BodyTargetLinearVelocity = BodyControlInfo.BodyLinearMAX - BodyControlInfo.BodyLinearPIDKp * BiasAbs-BodyControlInfo.BodyLinearPIDKd*BiasAddition;
     BodyControlTarget.MotorLeftTargetVelocity = BodyControlTarget.BodyTargetAngularVelocity + BodyControlTarget.BodyTargetLinearVelocity;
     BodyControlTarget.MotorRightTargetVelocity = -BodyControlTarget.BodyTargetAngularVelocity + BodyControlTarget.BodyTargetLinearVelocity;
 
+    BiasLast=Bias;           //
+    
     vl1_target = BodyControlTarget.MotorLeftTargetVelocity;
     vl2_target = vl1_target;
     vr1_target = BodyControlTarget.MotorRightTargetVelocity;

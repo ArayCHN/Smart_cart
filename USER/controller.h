@@ -13,3 +13,8 @@ typedef struct
     int MotorLeftTargetVelocity;
     int MotorRightTargetVelocity;
 }STRU_BODYCONTROL_TARGET;
+
+extern int Bias;
+extern int BiasAbs;
+extern int BiasLast;
+extern int BiasAddition;
